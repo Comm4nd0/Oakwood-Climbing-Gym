@@ -3,17 +3,40 @@ class ApiConstants {
   static const String apiUrl = '$baseUrl/api';
   static const String authUrl = '$baseUrl/auth';
 
-  // API Endpoints
-  static const String routes = '$apiUrl/routes/';
+  // Profile & Waivers
+  static const String profile = '$apiUrl/profile/me/';
+  static const String waivers = '$apiUrl/waivers/';
+  static const String safetySignoffs = '$apiUrl/safety-signoffs/';
+
+  // Memberships
+  static const String membershipPlans = '$apiUrl/membership-plans/';
+  static const String memberships = '$apiUrl/memberships/';
+  static const String punchCards = '$apiUrl/punch-cards/';
+
+  // Check-in & Capacity
+  static const String checkins = '$apiUrl/checkins/';
+  static const String capacity = '$apiUrl/checkins/capacity/';
+
+  // Walls & Routes
   static const String walls = '$apiUrl/walls/';
+  static const String routes = '$apiUrl/routes/';
   static const String logs = '$apiUrl/logs/';
   static const String logStats = '$apiUrl/logs/stats/';
+
+  // Classes & Bookings
   static const String classes = '$apiUrl/classes/';
   static const String bookings = '$apiUrl/bookings/';
+  static const String partyBookings = '$apiUrl/party-bookings/';
+
+  // Staff
+  static const String staffShifts = '$apiUrl/staff/shifts/';
+  static const String myShifts = '$apiUrl/staff/shifts/my_shifts/';
+  static const String staffQualifications = '$apiUrl/staff/qualifications/';
+
+  // Announcements & Events
   static const String announcements = '$apiUrl/announcements/';
+  static const String events = '$apiUrl/events/';
   static const String gymInfo = '$apiUrl/gym-info/';
-  static const String profile = '$apiUrl/profile/me/';
-  static const String memberships = '$apiUrl/memberships/';
 
   // Auth Endpoints
   static const String login = '$authUrl/token/login/';

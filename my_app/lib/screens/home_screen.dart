@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../services/api_service.dart';
+import '../models/capacity.dart';
 import 'routes_screen.dart';
 import 'classes_screen.dart';
 import 'logbook_screen.dart';
@@ -42,211 +45,203 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-class DashboardTab extends StatelessWidget {
+class DashboardTab extends StatefulWidget {
   const DashboardTab({super.key});
+
+  @override
+  State<DashboardTab> createState() => _DashboardTabState();
+}
+
+class _DashboardTabState extends State<DashboardTab> {
+  Capacity? _capacity;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCapacity();
+  }
+
+  Future<void> _loadCapacity() async {
+    try {
+      final api = context.read<ApiService>();
+      final capacity = await api.getCapacity();
+      setState(() => _capacity = capacity);
+    } catch (_) {}
+  }
+
+  Color _capacityColor(int percentage) {
+    if (percentage < 50) return Colors.green;
+    if (percentage < 75) return Colors.orange;
+    return Colors.red;
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Oakwood Climbing Gym'),
+        title: const Text('Oakwood Climbing Centre'),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Welcome Card
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(20),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.terrain,
-                      size: 48,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Welcome Back!',
-                            style: Theme.of(context).textTheme.titleLarge,
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            'Ready to climb today?',
-                            style: Theme.of(context).textTheme.bodyMedium,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            // Quick Stats
-            Text(
-              'Quick Stats',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-            ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Expanded(
-                  child: _StatCard(
-                    icon: Icons.check_circle,
-                    label: 'Sends',
-                    value: '--',
-                    color: Colors.green,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: _StatCard(
-                    icon: Icons.flash_on,
-                    label: 'Flashes',
-                    value: '--',
-                    color: Colors.amber,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: _StatCard(
-                    icon: Icons.trending_up,
-                    label: 'Total Logs',
-                    value: '--',
-                    color: Colors.blue,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 24),
-
-            // Quick Actions
-            Text(
-              'Quick Actions',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-            ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Expanded(
-                  child: _ActionCard(
-                    icon: Icons.add_circle,
-                    label: 'Log a Send',
-                    onTap: () {},
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: _ActionCard(
-                    icon: Icons.event_available,
-                    label: 'Book a Class',
-                    onTap: () {},
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 24),
-
-            // Gym Hours
-            Text(
-              'Gym Hours',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-            ),
-            const SizedBox(height: 8),
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  children: const [
-                    _HoursRow(day: 'Mon - Thu', hours: '6:00 AM - 10:00 PM'),
-                    _HoursRow(day: 'Friday', hours: '6:00 AM - 9:00 PM'),
-                    _HoursRow(day: 'Saturday', hours: '8:00 AM - 8:00 PM'),
-                    _HoursRow(day: 'Sunday', hours: '8:00 AM - 6:00 PM'),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _StatCard extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final String value;
-  final Color color;
-
-  const _StatCard({
-    required this.icon,
-    required this.label,
-    required this.value,
-    required this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            Icon(icon, color: color, size: 28),
-            const SizedBox(height: 8),
-            Text(
-              value,
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-            ),
-            Text(label, style: Theme.of(context).textTheme.bodySmall),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _ActionCard extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-
-  const _ActionCard({
-    required this.icon,
-    required this.label,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(20),
+      body: RefreshIndicator(
+        onRefresh: _loadCapacity,
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.all(16),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(icon, size: 36, color: Theme.of(context).colorScheme.primary),
+              // Welcome Card
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.terrain,
+                        size: 48,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Welcome Back!',
+                              style: Theme.of(context).textTheme.titleLarge,
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'Ready to climb today?',
+                              style: Theme.of(context).textTheme.bodyMedium,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // Live Capacity
+              Text(
+                'How Busy Are We?',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+              ),
               const SizedBox(height: 8),
-              Text(label, textAlign: TextAlign.center),
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: _capacity != null
+                      ? Column(
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  '${_capacity!.currentCount}',
+                                  style: TextStyle(
+                                    fontSize: 36,
+                                    fontWeight: FontWeight.bold,
+                                    color: _capacityColor(_capacity!.percentage),
+                                  ),
+                                ),
+                                Text(
+                                  ' / ${_capacity!.isPeak ? _capacity!.peakCapacity : _capacity!.maxCapacity}',
+                                  style: Theme.of(context).textTheme.titleLarge,
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            LinearProgressIndicator(
+                              value: _capacity!.percentage / 100,
+                              backgroundColor: Colors.grey.shade200,
+                              color: _capacityColor(_capacity!.percentage),
+                              minHeight: 8,
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            const SizedBox(height: 4),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  '${_capacity!.percentage}% full',
+                                  style: Theme.of(context).textTheme.bodySmall,
+                                ),
+                                if (_capacity!.isPeak)
+                                  const Text(
+                                    'Peak Time',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.orange,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ],
+                        )
+                      : const Center(
+                          child: Text('Capacity info unavailable'),
+                        ),
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              // Gym Hours
+              Text(
+                'Opening Hours',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+              ),
+              const SizedBox(height: 8),
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    children: const [
+                      _HoursRow(day: 'Mon - Fri', hours: '10:00 - 22:00'),
+                      _HoursRow(day: 'Saturday', hours: '10:00 - 18:00'),
+                      _HoursRow(day: 'Sunday', hours: '10:00 - 18:00'),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 4),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Text(
+                  'Peak: Mon-Fri after 4pm, all day weekends & bank holidays',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Colors.grey,
+                      ),
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              // Contact
+              Text(
+                'Contact',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+              ),
+              const SizedBox(height: 8),
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    children: [
+                      _ContactRow(icon: Icons.location_on, text: 'Waterloo Rd, Bracknell, Wokingham RG40 3DA'),
+                      _ContactRow(icon: Icons.phone, text: '0118 979 2246'),
+                      _ContactRow(icon: Icons.email, text: 'enquiries@oakwoodclimbingcentre.com'),
+                    ],
+                  ),
+                ),
+              ),
             ],
           ),
         ),
@@ -270,6 +265,27 @@ class _HoursRow extends StatelessWidget {
         children: [
           Text(day, style: const TextStyle(fontWeight: FontWeight.w500)),
           Text(hours),
+        ],
+      ),
+    );
+  }
+}
+
+class _ContactRow extends StatelessWidget {
+  final IconData icon;
+  final String text;
+
+  const _ContactRow({required this.icon, required this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          Icon(icon, size: 18, color: Colors.grey.shade600),
+          const SizedBox(width: 12),
+          Expanded(child: Text(text)),
         ],
       ),
     );

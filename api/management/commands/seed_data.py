@@ -1,131 +1,216 @@
-"""Management command to seed the database with sample data."""
+"""Management command to seed the database with sample data for Oakwood Climbing Centre."""
 
 from datetime import date, time
+from decimal import Decimal
 from django.core.management.base import BaseCommand
 from django.contrib.auth.models import User
 from api.models import (
-    WallSection, ClimbingRoute, GymClass, ClassSchedule,
-    GymInfo, Announcement,
+    MemberProfile, MembershipPlan, WallSection, ClimbingRoute,
+    GymClass, ClassSchedule, GymInfo, Announcement, CapacitySetting,
 )
 from django.utils import timezone
 
 
 class Command(BaseCommand):
-    help = 'Seeds the database with sample climbing gym data'
+    help = 'Seeds the database with Oakwood Climbing Centre sample data'
 
     def handle(self, *args, **options):
-        self.stdout.write('Seeding database...')
+        self.stdout.write('Seeding Oakwood Climbing Centre database...')
 
         # Gym Info
-        gym, _ = GymInfo.objects.get_or_create(
+        GymInfo.objects.get_or_create(
             pk=1,
             defaults={
-                'name': 'Oakwood Climbing Gym',
-                'address': '123 Oakwood Drive\nBoulder, CO 80301',
-                'phone': '(303) 555-0142',
-                'email': 'info@oakwoodclimbing.com',
-                'website': 'https://oakwoodclimbing.com',
-                'description': 'Boulder\'s premier indoor climbing facility featuring '
-                               'world-class bouldering, top rope, and lead climbing walls.',
+                'name': 'Oakwood Climbing Centre',
+                'address': 'Waterloo Rd, Bracknell, Wokingham RG40 3DA',
+                'phone': '0118 979 2246',
+                'email': 'enquiries@oakwoodclimbingcentre.com',
+                'website': 'https://www.oakwoodclimbingcentre.com',
+                'description': (
+                    "Oakwood Climbing Centre is Bracknell's premier indoor climbing facility "
+                    "featuring bouldering, roped climbing on 9m walls, auto-belays, "
+                    "outdoor bouldering, a kids' zone, training area, and gym."
+                ),
+                'monday_hours': '10:00 - 22:00',
+                'tuesday_hours': '10:00 - 22:00',
+                'wednesday_hours': '10:00 - 22:00',
+                'thursday_hours': '10:00 - 22:00',
+                'friday_hours': '10:00 - 22:00',
+                'saturday_hours': '10:00 - 18:00',
+                'sunday_hours': '10:00 - 18:00',
+                'peak_info': 'Peak times: Mon-Fri after 4pm, all day weekends & bank holidays',
             }
         )
 
-        # Wall Sections
-        walls = []
-        wall_data = [
-            ('The Cave', 'bouldering', 'Steep overhanging bouldering cave'),
-            ('Slab Wall', 'bouldering', 'Technical slab bouldering wall'),
-            ('Main Boulder', 'bouldering', 'Central bouldering area with varied angles'),
-            ('North Face', 'top_rope', 'Tall top rope wall with varied routes'),
-            ('Lead Tower', 'lead', '15m lead climbing tower'),
-            ('Auto Belay Bay', 'auto_belay', 'Six auto belay stations'),
-            ('Kids Zone', 'kids', 'Fun climbing area for children'),
+        # Capacity setting
+        CapacitySetting.objects.get_or_create(
+            pk=1, defaults={'max_capacity': 100, 'peak_capacity': 80}
+        )
+
+        # Membership Plans
+        plans = [
+            ('Monthly Adult', 'monthly_adult', Decimal('45.00'), True, 2, 1),
+            ('Monthly Concession', 'monthly_concession', Decimal('38.00'), True, 2, 1),
+            ('Monthly Family', 'monthly_family', Decimal('99.00'), True, 2, 1),
+            ('Punch Card (10 Visits)', 'punch_card_10', Decimal('110.00'), False, 0, 0),
+            ('Day Pass (Peak)', 'day_pass_peak', Decimal('13.00'), False, 0, 0),
+            ('Day Pass (Off-Peak)', 'day_pass_offpeak', Decimal('11.00'), False, 0, 0),
+            ('Morning Discount', 'day_pass_morning', Decimal('9.00'), False, 0, 0),
+            ('Under 18 (Peak)', 'under_18_peak', Decimal('9.00'), False, 0, 0),
+            ('Under 18 (Off-Peak)', 'under_18_offpeak', Decimal('6.50'), False, 0, 0),
         ]
-        for name, wall_type, desc in wall_data:
-            wall, _ = WallSection.objects.get_or_create(
-                name=name, defaults={'wall_type': wall_type, 'description': desc}
+        for name, plan_type, price, recurring, min_months, cancel_months in plans:
+            MembershipPlan.objects.get_or_create(
+                plan_type=plan_type,
+                defaults={
+                    'name': name, 'price': price, 'is_recurring': recurring,
+                    'min_commitment_months': min_months,
+                    'cancellation_notice_months': cancel_months,
+                }
             )
-            walls.append(wall)
+
+        # Wall Sections
+        walls = {}
+        wall_data = [
+            ('Main Boulder', 'bouldering', 'Central bouldering area with varied angles', None),
+            ('The Cave', 'bouldering', 'Steep overhanging bouldering cave', None),
+            ('Slab Wall', 'bouldering', 'Technical slab bouldering', None),
+            ('Outdoor Bouldering', 'outdoor', 'Illuminated outdoor bouldering area', None),
+            ('North Face', 'top_rope', 'Main roped climbing wall', Decimal('9.0')),
+            ('Auto Belay Bay', 'auto_belay', 'Six auto belay stations', Decimal('9.0')),
+            ('Lead Tower', 'lead', 'Lead climbing wall', Decimal('9.0')),
+            ('Kids Zone', 'kids', "Dedicated area for younger climbers with shorter walls and a slide", None),
+            ('Training Area', 'training', 'Fingerboards, campus boards, and training equipment', None),
+        ]
+        for name, wtype, desc, height in wall_data:
+            wall, _ = WallSection.objects.get_or_create(
+                name=name,
+                defaults={'wall_type': wtype, 'description': desc, 'height_metres': height}
+            )
+            walls[name] = wall
 
         # Sample Routes
         route_data = [
-            ('Crimpy Larry', 'V2', 'v_scale', 'green', walls[0], 'Alex'),
-            ('Sloper City', 'V4', 'v_scale', 'blue', walls[0], 'Jordan'),
-            ('Balance Beam', 'V1', 'v_scale', 'yellow', walls[1], 'Alex'),
-            ('Pinch Me', 'V5', 'v_scale', 'red', walls[2], 'Sam'),
-            ('The Dyno', 'V6', 'v_scale', 'purple', walls[2], 'Jordan'),
-            ('Smooth Operator', '5.9', 'yds', 'green', walls[3], 'Pat'),
-            ('Vertical Limit', '5.11a', 'yds', 'red', walls[3], 'Sam'),
-            ('Sky High', '5.10c', 'yds', 'orange', walls[4], 'Pat'),
-            ('First Steps', '5.6', 'yds', 'yellow', walls[5], 'Alex'),
-            ('Rainbow Road', 'V0', 'v_scale', 'pink', walls[6], 'Jordan'),
+            ('Crimpy Larry', 'f4', 'font', 'green', 'Main Boulder', 'Alex'),
+            ('Sloper City', 'f5+', 'font', 'blue', 'The Cave', 'Jordan'),
+            ('Balance Beam', 'f3', 'font', 'yellow', 'Slab Wall', 'Alex'),
+            ('Pinch Me', 'f6a', 'font', 'red', 'Main Boulder', 'Sam'),
+            ('The Dyno', 'f6b+', 'font', 'purple', 'The Cave', 'Jordan'),
+            ('Night Moves', 'f5', 'font', 'orange', 'Outdoor Bouldering', 'Pat'),
+            ('Smooth Operator', '5+', 'uk_tech', 'green', 'North Face', 'Pat'),
+            ('Vertical Limit', '6b', 'uk_tech', 'red', 'North Face', 'Sam'),
+            ('Sky High', '6a', 'uk_tech', 'orange', 'Lead Tower', 'Pat'),
+            ('First Steps', '4', 'uk_tech', 'yellow', 'Auto Belay Bay', 'Alex'),
+            ('Rainbow Road', 'f2', 'font', 'pink', 'Kids Zone', 'Jordan'),
         ]
-        for name, grade, system, color, wall, setter in route_data:
+        for name, grade, system, color, wall_name, setter in route_data:
             ClimbingRoute.objects.get_or_create(
                 name=name,
                 defaults={
                     'grade': grade, 'grade_system': system, 'color': color,
-                    'wall_section': wall, 'setter': setter, 'date_set': date.today(),
+                    'wall_section': walls[wall_name], 'setter': setter,
+                    'date_set': date.today(),
                 }
             )
 
-        # Gym Classes
+        # Create sample staff user
+        staff_user, created = User.objects.get_or_create(
+            username='staff_lisa',
+            defaults={'first_name': 'Lisa', 'last_name': 'Staff', 'email': 'lisa@oakwoodclimbing.com'}
+        )
+        if created:
+            staff_user.set_password('staffpass123')
+            staff_user.save()
+            MemberProfile.objects.create(
+                user=staff_user, role='instructor', phone='07700 900123'
+            )
+
+        # Gym Classes (matching real Oakwood offerings)
         class_data = [
-            ('Intro to Climbing', 'Learn the basics of indoor climbing.', 'Staff', 'beginner', 12, 90),
-            ('Lead Climbing Clinic', 'Master lead climbing techniques.', 'Pat', 'intermediate', 8, 120),
-            ('Advanced Bouldering', 'Push your bouldering to the next level.', 'Jordan', 'advanced', 10, 90),
-            ('Youth Climbing Club', 'Fun climbing sessions for kids 6-14.', 'Alex', 'all_levels', 15, 60),
-            ('Yoga for Climbers', 'Flexibility and recovery for climbers.', 'Sam', 'all_levels', 20, 60),
+            ('Boulder Taster', 'boulder_taster', 'beginner', 'adult', 6, 60, Decimal('20.00'), True,
+             'Learn the basics of bouldering. Shoe and chalk hire included, plus a 25% off voucher for your next visit.'),
+            ('Auto Belay Induction', 'auto_belay_induction', 'beginner', 'adult', 8, 30, Decimal('10.00'), False,
+             'Learn how to safely put on a harness and use the auto belays.'),
+            ("Beginner's Rope Course", 'beginner_rope', 'beginner', 'adult', 8, 150, Decimal('60.00'), False,
+             'Learn basic rope safety over 2 weeks: tying in, belaying with an ATC, ground anchors, and auto belays.'),
+            ('Lead Climbing', 'lead_climbing', 'intermediate', 'adult', 6, 120, Decimal('45.00'), False,
+             'Learn about lead climbing risks, belay styles, and how to lead climb and lead belay safely.'),
+            ('Coaching Session', 'coaching', 'intermediate', 'adult', 8, 90, Decimal('15.00'), False,
+             'Monthly adult coaching focusing on footwork, dynamic movement, body positioning, and session planning.'),
+            ('Adult Social', 'adult_social', 'all_levels', 'adult', 20, 120, Decimal('0.00'), False,
+             'Meet others, build your climbing network, and improve technique with coach Lisa. Free for members!'),
+            ('Private Session', 'private_session', 'all_levels', 'all_ages', 4, 60, Decimal('50.00'), True,
+             'Tailored 1-hour instructed session for any age (4+). Adults and children can climb together.'),
+            ('Youth Session (5-7)', 'youth_session', 'beginner', 'youth_5_7', 10, 75, Decimal('8.00'), False,
+             'Fun introduction to climbing for 5-7 year olds in a supervised group setting.'),
+            ('Youth Session (7-12)', 'youth_session', 'all_levels', 'youth_7_12', 12, 75, Decimal('8.00'), False,
+             'Climbing sessions for 7-12 year olds, building skills and confidence.'),
+            ('Youth Session (13-17)', 'youth_session', 'all_levels', 'youth_13_17', 12, 75, Decimal('8.00'), False,
+             'Sessions for teen climbers, developing technique and strength.'),
+            ('NICAS Course', 'nicas', 'all_levels', 'youth_7_12', 8, 90, Decimal('12.00'), False,
+             'Nationally recognised award scheme for indoor roped climbing, progressing through levels.'),
+            ('NIBAS Course', 'nibas', 'all_levels', 'youth_7_12', 8, 90, Decimal('12.00'), False,
+             'Nationally recognised award scheme for indoor bouldering, progressing through levels.'),
+            ('Birthday Party', 'birthday_party', 'all_levels', 'all_ages', 12, 90, Decimal('150.00'), True,
+             'Instructed birthday party for age 5+. Children scale bouldering walls and try auto-belays.'),
         ]
-        classes = []
-        for name, desc, instructor, diff, max_p, dur in class_data:
+        classes = {}
+        for name, ctype, diff, age, max_p, dur, price, shoes, desc in class_data:
             gc, _ = GymClass.objects.get_or_create(
                 name=name,
                 defaults={
-                    'description': desc, 'instructor': instructor,
-                    'difficulty': diff, 'max_participants': max_p,
-                    'duration_minutes': dur,
+                    'class_type': ctype, 'difficulty': diff, 'age_group': age,
+                    'max_participants': max_p, 'duration_minutes': dur,
+                    'price': price, 'includes_shoe_hire': shoes,
+                    'description': desc, 'instructor': staff_user,
                 }
             )
-            classes.append(gc)
+            classes[name] = gc
 
         # Schedules
         schedule_data = [
-            (classes[0], 1, '18:00'),  # Intro - Tuesday 6pm
-            (classes[0], 5, '10:00'),  # Intro - Saturday 10am
-            (classes[1], 3, '19:00'),  # Lead Clinic - Thursday 7pm
-            (classes[2], 0, '18:30'),  # Advanced Boulder - Monday 6:30pm
-            (classes[2], 4, '18:30'),  # Advanced Boulder - Friday 6:30pm
-            (classes[3], 2, '16:00'),  # Youth - Wednesday 4pm
-            (classes[3], 5, '11:00'),  # Youth - Saturday 11am
-            (classes[4], 0, '07:00'),  # Yoga - Monday 7am
-            (classes[4], 3, '07:00'),  # Yoga - Thursday 7am
+            ('Boulder Taster', 5, '10:00'),
+            ('Auto Belay Induction', 5, '14:00'),
+            ('Adult Social', 3, '19:15'),  # Thursday 7:15pm
+            ('Coaching Session', 0, '19:00'),  # Monthly Monday
+            ('Youth Session (5-7)', 5, '09:00'),
+            ('Youth Session (7-12)', 5, '10:30'),
+            ('Youth Session (13-17)', 5, '12:00'),
+            ('NICAS Course', 2, '16:30'),  # Wednesday
+            ('NIBAS Course', 2, '16:30'),  # Wednesday
         ]
-        for gc, day, t in schedule_data:
-            h, m = t.split(':')
-            ClassSchedule.objects.get_or_create(
-                gym_class=gc, day_of_week=day,
-                defaults={'start_time': time(int(h), int(m))}
-            )
+        for class_name, day, t in schedule_data:
+            if class_name in classes:
+                h, m = t.split(':')
+                ClassSchedule.objects.get_or_create(
+                    gym_class=classes[class_name], day_of_week=day,
+                    defaults={'start_time': time(int(h), int(m))}
+                )
 
         # Announcements
         Announcement.objects.get_or_create(
-            title='Welcome to Oakwood Climbing Gym!',
+            title='Welcome to Oakwood Climbing Centre!',
             defaults={
-                'content': 'We are thrilled to welcome you to our state-of-the-art climbing facility. '
-                           'Check out our new routes and class schedule!',
+                'content': (
+                    'Welcome to our state-of-the-art climbing facility featuring '
+                    'bouldering, 9m roped walls, auto-belays, outdoor climbing, '
+                    "a kids' zone, and training area. No need to book - just turn up!"
+                ),
                 'priority': 'normal',
                 'publish_date': timezone.now(),
             }
         )
         Announcement.objects.get_or_create(
-            title='Route Reset: Main Boulder Area',
+            title='Mighty Oak 2026',
             defaults={
-                'content': 'The Main Boulder area will be getting a full reset this weekend. '
-                           'Exciting new problems coming your way!',
+                'content': (
+                    "Oakwood's flagship annual bouldering competition returns 28-29 March 2026! "
+                    'Featuring world-class routes, a mini marketplace with climbing gear, food, '
+                    'limited-edition beer, plus a DJ and live entertainment.'
+                ),
                 'priority': 'high',
                 'publish_date': timezone.now(),
             }
         )
 
-        self.stdout.write(self.style.SUCCESS('Database seeded successfully!'))
+        self.stdout.write(self.style.SUCCESS('Oakwood Climbing Centre database seeded successfully!'))
