@@ -32,7 +32,7 @@ class AppTheme {
       elevation: 0,
       centerTitle: false,
     ),
-    cardTheme: CardTheme(
+    cardTheme: CardThemeData(
       color: surfaceColor,
       elevation: 2,
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),

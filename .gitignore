@@ -72,3 +72,6 @@ docker-compose.override.yml
 
 # Node (if any frontend tooling)
 node_modules/
+
+# Claude Code worktrees
+.claude/worktrees/
