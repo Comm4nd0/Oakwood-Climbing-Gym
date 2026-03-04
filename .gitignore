@@ -9,22 +9,47 @@ build/
 .eggs/
 *.egg
 venv/
+env/
+.venv/
 .env
+.env.local
+.env.*.local
+*.log
+
+# Python tooling
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.tox/
 
 # Django
 db.sqlite3
+db.sqlite3-journal
 staticfiles/
 media/
+
+# Secrets & credentials
+*.pem
+*.key
+*.crt
+firebase-credentials.json
+serviceAccountKey.json
 
 # Flutter
 my_app/.dart_tool/
 my_app/.packages
+my_app/.metadata
 my_app/build/
 my_app/.flutter-plugins
 my_app/.flutter-plugins-dependencies
+my_app/.fvm/
 my_app/android/.gradle/
 my_app/android/app/build/
 my_app/android/build/
+my_app/android/local.properties
+my_app/android/key.properties
+my_app/android/*.jks
 my_app/ios/Pods/
 my_app/ios/.symlinks/
 my_app/ios/Flutter/Flutter.framework
@@ -40,6 +65,10 @@ my_app/.pub/
 *.swo
 *~
 .DS_Store
+Thumbs.db
 
 # Docker
 docker-compose.override.yml
+
+# Node (if any frontend tooling)
+node_modules/
