@@ -3,7 +3,7 @@
 from datetime import date, time
 from decimal import Decimal
 from django.core.management.base import BaseCommand
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from api.models import (
     MemberProfile, MembershipPlan, WallSection, ClimbingRoute,
     GymClass, ClassSchedule, GymInfo, Announcement, CapacitySetting,
@@ -15,6 +15,7 @@ class Command(BaseCommand):
     help = 'Seeds the database with Oakwood Climbing Centre sample data'
 
     def handle(self, *args, **options):
+        User = get_user_model()
         self.stdout.write('Seeding Oakwood Climbing Centre database...')
 
         # Gym Info
@@ -91,32 +92,44 @@ class Command(BaseCommand):
 
         # Sample Routes
         route_data = [
-            ('Crimpy Larry', 'f4', 'font', 'green', 'Main Boulder', 'Alex'),
-            ('Sloper City', 'f5+', 'font', 'blue', 'The Cave', 'Jordan'),
-            ('Balance Beam', 'f3', 'font', 'yellow', 'Slab Wall', 'Alex'),
-            ('Pinch Me', 'f6a', 'font', 'red', 'Main Boulder', 'Sam'),
-            ('The Dyno', 'f6b+', 'font', 'purple', 'The Cave', 'Jordan'),
-            ('Night Moves', 'f5', 'font', 'orange', 'Outdoor Bouldering', 'Pat'),
-            ('Smooth Operator', '5+', 'uk_tech', 'green', 'North Face', 'Pat'),
-            ('Vertical Limit', '6b', 'uk_tech', 'red', 'North Face', 'Sam'),
-            ('Sky High', '6a', 'uk_tech', 'orange', 'Lead Tower', 'Pat'),
-            ('First Steps', '4', 'uk_tech', 'yellow', 'Auto Belay Bay', 'Alex'),
-            ('Rainbow Road', 'f2', 'font', 'pink', 'Kids Zone', 'Jordan'),
+            ('Crimpy Larry', 'f4', 'font', 'green', 'Main Boulder', 'Alex',
+             'routes/crimpy_larry.jpg', 'Technical crimp-heavy problem with a tricky top-out.'),
+            ('Sloper City', 'f5+', 'font', 'blue', 'The Cave', 'Jordan',
+             'routes/sloper_city.jpg', 'All slopers, all the time. Keep your hips in!'),
+            ('Balance Beam', 'f3', 'font', 'yellow', 'Slab Wall', 'Alex',
+             'routes/balance_beam.jpg', 'Delicate slab climbing with small footholds and balance moves.'),
+            ('Pinch Me', 'f6a', 'font', 'red', 'Main Boulder', 'Sam',
+             'routes/pinch_me.jpg', 'Sustained pinch grips on the 45-degree wall. Strong thumbs required.'),
+            ('The Dyno', 'f6b+', 'font', 'purple', 'The Cave', 'Jordan',
+             'routes/the_dyno.jpg', 'Big dynamic move to the finishing jug. Commit or fall!'),
+            ('Night Moves', 'f5', 'font', 'orange', 'Outdoor Bouldering', 'Pat',
+             'routes/night_moves.jpg', 'Fun outdoor problem under the floodlights. Great for evening sessions.'),
+            ('Smooth Operator', '5+', 'uk_tech', 'green', 'North Face', 'Pat',
+             'routes/smooth_operator.jpg', 'Flowing roped route with good rests. Perfect for warming up.'),
+            ('Vertical Limit', '6b', 'uk_tech', 'red', 'North Face', 'Sam',
+             'routes/vertical_limit.jpg', 'Sustained and technical. The crux is at two-thirds height.'),
+            ('Sky High', '6a', 'uk_tech', 'orange', 'Lead Tower', 'Pat',
+             'routes/sky_high.jpg', 'Classic lead route with a pumpy finish. Clip early!'),
+            ('First Steps', '4', 'uk_tech', 'yellow', 'Auto Belay Bay', 'Alex',
+             'routes/first_steps.jpg', 'Great first route for beginners. Big holds all the way up.'),
+            ('Rainbow Road', 'f2', 'font', 'pink', 'Kids Zone', 'Jordan',
+             'routes/rainbow_road.jpg', 'Colourful jugs for the little ones. A kids favourite!'),
         ]
-        for name, grade, system, color, wall_name, setter in route_data:
+        for name, grade, system, color, wall_name, setter, img, desc in route_data:
             ClimbingRoute.objects.get_or_create(
                 name=name,
                 defaults={
                     'grade': grade, 'grade_system': system, 'color': color,
                     'wall_section': walls[wall_name], 'setter': setter,
-                    'date_set': date.today(),
+                    'date_set': date.today(), 'image': img,
+                    'description': desc,
                 }
             )
 
         # Create sample staff user
         staff_user, created = User.objects.get_or_create(
-            username='staff_lisa',
-            defaults={'first_name': 'Lisa', 'last_name': 'Staff', 'email': 'lisa@oakwoodclimbing.com'}
+            email='lisa@oakwoodclimbing.com',
+            defaults={'first_name': 'Lisa', 'last_name': 'Staff'}
         )
         if created:
             staff_user.set_password('staffpass123')

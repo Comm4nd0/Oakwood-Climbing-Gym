@@ -3,8 +3,9 @@ import '../models/gym_class.dart';
 
 class ClassCard extends StatelessWidget {
   final GymClass gymClass;
+  final VoidCallback? onTap;
 
-  const ClassCard({super.key, required this.gymClass});
+  const ClassCard({super.key, required this.gymClass, this.onTap});
 
   Color _getDifficultyColor(String difficulty) {
     switch (difficulty) {
@@ -22,7 +23,10 @@ class ClassCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      child: Padding(
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -104,6 +108,7 @@ class ClassCard extends StatelessWidget {
             ],
           ],
         ),
+      ),
       ),
     );
   }

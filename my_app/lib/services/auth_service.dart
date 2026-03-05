@@ -18,7 +18,7 @@ class AuthService extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<bool> login(String username, String password) async {
+  Future<bool> login(String email, String password) async {
     _isLoading = true;
     notifyListeners();
 
@@ -26,7 +26,7 @@ class AuthService extends ChangeNotifier {
       final response = await http.post(
         Uri.parse(ApiConstants.login),
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'username': username, 'password': password}),
+        body: jsonEncode({'email': email, 'password': password}),
       );
 
       if (response.statusCode == 200) {
@@ -46,7 +46,7 @@ class AuthService extends ChangeNotifier {
     return false;
   }
 
-  Future<bool> register(String username, String email, String password, String rePassword) async {
+  Future<bool> register(String email, String firstName, String lastName, String password, String rePassword) async {
     _isLoading = true;
     notifyListeners();
 
@@ -55,8 +55,9 @@ class AuthService extends ChangeNotifier {
         Uri.parse(ApiConstants.register),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          'username': username,
           'email': email,
+          'first_name': firstName,
+          'last_name': lastName,
           'password': password,
           're_password': rePassword,
         }),

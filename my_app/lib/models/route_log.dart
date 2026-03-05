@@ -1,8 +1,11 @@
 class RouteLog {
   final int id;
+  final int climber;
+  final String climberName;
   final int route;
   final String routeName;
   final String routeGrade;
+  final String routeGradeSystem;
   final String attemptType;
   final String attemptTypeDisplay;
   final int? rating;
@@ -11,9 +14,12 @@ class RouteLog {
 
   RouteLog({
     required this.id,
+    required this.climber,
+    required this.climberName,
     required this.route,
     required this.routeName,
     required this.routeGrade,
+    required this.routeGradeSystem,
     required this.attemptType,
     required this.attemptTypeDisplay,
     this.rating,
@@ -24,9 +30,12 @@ class RouteLog {
   factory RouteLog.fromJson(Map<String, dynamic> json) {
     return RouteLog(
       id: json['id'],
+      climber: json['climber'] ?? 0,
+      climberName: json['climber_name'] ?? '',
       route: json['route'],
       routeName: json['route_name'] ?? '',
       routeGrade: json['route_grade'] ?? '',
+      routeGradeSystem: json['route_grade_system'] ?? 'font',
       attemptType: json['attempt_type'],
       attemptTypeDisplay: json['attempt_type_display'] ?? json['attempt_type'],
       rating: json['rating'],

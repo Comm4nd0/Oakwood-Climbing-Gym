@@ -1,5 +1,6 @@
+from django.contrib.auth import get_user_model
 from rest_framework import serializers
-from django.contrib.auth.models import User
+
 from .models import (
     MemberProfile, Waiver, SafetySignOff,
     MembershipPlan, Membership, PunchCard,
@@ -15,10 +16,13 @@ from .models import (
 # User & Profile
 # =============================================================================
 
+User = get_user_model()
+
+
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'first_name', 'last_name']
+        fields = ['id', 'email', 'first_name', 'last_name']
         read_only_fields = ['id']
 
 
@@ -124,7 +128,7 @@ class CheckInSerializer(serializers.ModelSerializer):
 
     def get_member_name(self, obj):
         if obj.member:
-            return obj.member.get_full_name() or obj.member.username
+            return obj.member.get_full_name() or obj.member.email
         return obj.visitor_name
 
 
@@ -169,15 +173,24 @@ class ClimbingRouteSerializer(serializers.ModelSerializer):
 class RouteLogSerializer(serializers.ModelSerializer):
     route_name = serializers.CharField(source='route.name', read_only=True)
     route_grade = serializers.CharField(source='route.grade', read_only=True)
+    route_grade_system = serializers.CharField(source='route.grade_system', read_only=True)
     attempt_type_display = serializers.CharField(source='get_attempt_type_display', read_only=True)
+    climber_name = serializers.SerializerMethodField()
 
     class Meta:
         model = RouteLog
         fields = [
-            'id', 'climber', 'route', 'route_name', 'route_grade',
-            'attempt_type', 'attempt_type_display', 'rating', 'notes', 'logged_at',
+            'id', 'climber', 'climber_name', 'route', 'route_name', 'route_grade',
+            'route_grade_system', 'attempt_type', 'attempt_type_display',
+            'rating', 'notes', 'logged_at',
         ]
         read_only_fields = ['id', 'climber', 'logged_at']
+
+    def get_climber_name(self, obj):
+        user = obj.climber
+        if user.first_name:
+            return f"{user.first_name} {user.last_name}".strip()
+        return user.email.split('@')[0]
 
 
 # =============================================================================
@@ -211,7 +224,7 @@ class GymClassSerializer(serializers.ModelSerializer):
 
     def get_instructor_name(self, obj):
         if obj.instructor:
-            return obj.instructor.get_full_name() or obj.instructor.username
+            return obj.instructor.get_full_name() or obj.instructor.email
         return None
 
 
@@ -256,7 +269,7 @@ class StaffShiftSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'created_at']
 
     def get_staff_name(self, obj):
-        return obj.staff_member.get_full_name() or obj.staff_member.username
+        return obj.staff_member.get_full_name() or obj.staff_member.email
 
 
 class StaffQualificationSerializer(serializers.ModelSerializer):

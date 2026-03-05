@@ -1,6 +1,43 @@
-from django.db import models
-from django.contrib.auth.models import User
+from django.conf import settings
+from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.core.validators import MinValueValidator, MaxValueValidator
+from django.db import models
+
+
+# =============================================================================
+# Custom User Model
+# =============================================================================
+
+class UserManager(BaseUserManager):
+    """Custom manager for User model where email is the unique identifier."""
+
+    def create_user(self, email, password=None, **extra_fields):
+        if not email:
+            raise ValueError('Users must have an email address')
+        email = self.normalize_email(email)
+        user = self.model(email=email, **extra_fields)
+        user.set_password(password)
+        user.save(using=self._db)
+        return user
+
+    def create_superuser(self, email, password=None, **extra_fields):
+        extra_fields.setdefault('is_staff', True)
+        extra_fields.setdefault('is_superuser', True)
+        return self.create_user(email, password, **extra_fields)
+
+
+class User(AbstractUser):
+    """Custom user model that uses email instead of username for authentication."""
+    username = None
+    email = models.EmailField('email address', unique=True)
+
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ['first_name', 'last_name']
+
+    objects = UserManager()
+
+    def __str__(self):
+        return self.email
 
 
 # =============================================================================
@@ -17,7 +54,7 @@ class MemberProfile(models.Model):
         ('admin', 'Admin'),
     ]
 
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='profile')
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='member')
     phone = models.CharField(max_length=20, blank=True)
     date_of_birth = models.DateField(null=True, blank=True)
@@ -54,7 +91,7 @@ class MemberProfile(models.Model):
         return age < 18
 
     def __str__(self):
-        return f"{self.user.get_full_name() or self.user.username} ({self.get_role_display()})"
+        return f"{self.user.get_full_name() or self.user.email} ({self.get_role_display()})"
 
 
 # =============================================================================
@@ -68,7 +105,7 @@ class Waiver(models.Model):
         ('under_18', 'Under 18 Guardian Waiver'),
     ]
 
-    member = models.ForeignKey(User, on_delete=models.CASCADE, related_name='waivers')
+    member = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='waivers')
     waiver_type = models.CharField(max_length=20, choices=WAIVER_TYPES)
 
     # Guardian details (for under-18 waivers)
@@ -88,7 +125,7 @@ class Waiver(models.Model):
     is_active = models.BooleanField(default=True)
 
     def __str__(self):
-        return f"{self.member.username} - {self.get_waiver_type_display()}"
+        return f"{self.member.email} - {self.get_waiver_type_display()}"
 
     class Meta:
         ordering = ['-signed_at']
@@ -103,7 +140,7 @@ class SafetySignOff(models.Model):
         ('lead', 'Lead Climbing Competency'),
     ]
 
-    member = models.ForeignKey(User, on_delete=models.CASCADE, related_name='safety_signoffs')
+    member = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='safety_signoffs')
     sign_off_type = models.CharField(max_length=20, choices=SIGN_OFF_TYPES)
     signed_off_by = models.ForeignKey(
         User, on_delete=models.SET_NULL, null=True, related_name='signoffs_given'
@@ -113,7 +150,7 @@ class SafetySignOff(models.Model):
     is_active = models.BooleanField(default=True)
 
     def __str__(self):
-        return f"{self.member.username} - {self.get_sign_off_type_display()}"
+        return f"{self.member.email} - {self.get_sign_off_type_display()}"
 
     class Meta:
         unique_together = ['member', 'sign_off_type']
@@ -164,7 +201,7 @@ class Membership(models.Model):
         ('expired', 'Expired'),
     ]
 
-    member = models.ForeignKey(User, on_delete=models.CASCADE, related_name='memberships')
+    member = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='memberships')
     plan = models.ForeignKey(MembershipPlan, on_delete=models.PROTECT, related_name='memberships')
     status = models.CharField(max_length=25, choices=STATUS_CHOICES, default='active')
     start_date = models.DateField()
@@ -176,7 +213,7 @@ class Membership(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.member.username} - {self.plan.name} ({self.get_status_display()})"
+        return f"{self.member.email} - {self.plan.name} ({self.get_status_display()})"
 
     class Meta:
         ordering = ['-start_date']
@@ -184,14 +221,14 @@ class Membership(models.Model):
 
 class PunchCard(models.Model):
     """Pre-paid punch cards for pay-per-visit members."""
-    member = models.ForeignKey(User, on_delete=models.CASCADE, related_name='punch_cards')
+    member = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='punch_cards')
     total_visits = models.PositiveIntegerField(default=10)
     remaining_visits = models.PositiveIntegerField(default=10)
     purchased_at = models.DateTimeField(auto_now_add=True)
     expires_at = models.DateField(null=True, blank=True)
 
     def __str__(self):
-        return f"{self.member.username} - {self.remaining_visits}/{self.total_visits} visits"
+        return f"{self.member.email} - {self.remaining_visits}/{self.total_visits} visits"
 
 
 # =============================================================================
@@ -225,7 +262,7 @@ class CheckIn(models.Model):
         return self.checked_out_at is None
 
     def __str__(self):
-        name = self.member.username if self.member else self.visitor_name
+        name = (self.member.get_full_name() or self.member.email) if self.member else self.visitor_name
         return f"{name} - {self.checked_in_at.strftime('%H:%M %d/%m')}"
 
     class Meta:
@@ -237,7 +274,7 @@ class CapacitySetting(models.Model):
     max_capacity = models.PositiveIntegerField(default=100)
     peak_capacity = models.PositiveIntegerField(default=80)
     updated_at = models.DateTimeField(auto_now=True)
-    updated_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    updated_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
 
     def __str__(self):
         return f"Max: {self.max_capacity}, Peak: {self.peak_capacity}"
@@ -281,6 +318,7 @@ class ClimbingRoute(models.Model):
         ('font', 'Font Scale'),
         ('yds', 'YDS (Rope)'),
         ('uk_tech', 'UK Technical'),
+        ('french', 'French Sport'),
     ]
     COLORS = [
         ('red', 'Red'), ('blue', 'Blue'), ('green', 'Green'),
@@ -317,7 +355,7 @@ class RouteLog(models.Model):
         ('project', 'Project'),
     ]
 
-    climber = models.ForeignKey(User, on_delete=models.CASCADE, related_name='route_logs')
+    climber = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='route_logs')
     route = models.ForeignKey(ClimbingRoute, on_delete=models.CASCADE, related_name='logs')
     attempt_type = models.CharField(max_length=20, choices=ATTEMPT_TYPES)
     rating = models.IntegerField(
@@ -328,7 +366,7 @@ class RouteLog(models.Model):
     logged_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.climber.username} - {self.route.name} ({self.get_attempt_type_display()})"
+        return f"{self.climber.email} - {self.route.name} ({self.get_attempt_type_display()})"
 
     class Meta:
         ordering = ['-logged_at']
@@ -424,7 +462,7 @@ class Booking(models.Model):
         ('no_show', 'No Show'),
     ]
 
-    member = models.ForeignKey(User, on_delete=models.CASCADE, related_name='bookings')
+    member = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='bookings')
     class_schedule = models.ForeignKey(ClassSchedule, on_delete=models.CASCADE, related_name='bookings')
     date = models.DateField()
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='confirmed')
@@ -433,7 +471,7 @@ class Booking(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.member.username} - {self.class_schedule.gym_class.name} ({self.date})"
+        return f"{self.member.email} - {self.class_schedule.gym_class.name} ({self.date})"
 
     class Meta:
         ordering = ['-date']
@@ -476,7 +514,7 @@ class StaffShift(models.Model):
         ('general', 'General'),
     ]
 
-    staff_member = models.ForeignKey(User, on_delete=models.CASCADE, related_name='shifts')
+    staff_member = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='shifts')
     shift_type = models.CharField(max_length=20, choices=SHIFT_TYPES)
     shift_role = models.CharField(max_length=20, choices=SHIFT_ROLES, default='general')
     date = models.DateField()
@@ -487,7 +525,7 @@ class StaffShift(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.staff_member.username} - {self.get_shift_type_display()} ({self.date})"
+        return f"{self.staff_member.email} - {self.get_shift_type_display()} ({self.date})"
 
     class Meta:
         ordering = ['date', 'start_time']
@@ -506,7 +544,7 @@ class StaffQualification(models.Model):
         ('nibas_tutor', 'NIBAS Tutor'),
     ]
 
-    staff_member = models.ForeignKey(User, on_delete=models.CASCADE, related_name='qualifications')
+    staff_member = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='qualifications')
     qualification_type = models.CharField(max_length=20, choices=QUALIFICATION_TYPES)
     awarded_date = models.DateField()
     expiry_date = models.DateField(null=True, blank=True)
@@ -514,7 +552,7 @@ class StaffQualification(models.Model):
     is_active = models.BooleanField(default=True)
 
     def __str__(self):
-        return f"{self.staff_member.username} - {self.get_qualification_type_display()}"
+        return f"{self.staff_member.email} - {self.get_qualification_type_display()}"
 
     class Meta:
         unique_together = ['staff_member', 'qualification_type']
@@ -538,7 +576,7 @@ class Announcement(models.Model):
     image = models.ImageField(upload_to='announcements/', blank=True, null=True)
     is_published = models.BooleanField(default=True)
     publish_date = models.DateTimeField()
-    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='announcements')
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='announcements')
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

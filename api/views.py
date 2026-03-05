@@ -50,9 +50,14 @@ class MemberProfileViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
 
-    @action(detail=False, methods=['get'])
+    @action(detail=False, methods=['get', 'patch'], url_path='me')
     def me(self, request):
         profile, _ = MemberProfile.objects.get_or_create(user=request.user)
+        if request.method == 'PATCH':
+            serializer = MemberProfileSerializer(profile, data=request.data, partial=True)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            return Response(serializer.data)
         return Response(MemberProfileSerializer(profile).data)
 
 
@@ -239,7 +244,7 @@ class RouteLogViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        return RouteLog.objects.filter(climber=self.request.user).select_related('route')
+        return RouteLog.objects.filter(climber=self.request.user).select_related('route', 'climber')
 
     def perform_create(self, serializer):
         serializer.save(climber=self.request.user)
@@ -253,14 +258,27 @@ class RouteLogViewSet(viewsets.ModelViewSet):
             'total_flashes': logs.filter(attempt_type='flash').count(),
         })
 
+    @action(detail=False, methods=['get'], url_path='for-route/(?P<route_id>[^/.]+)')
+    def for_route(self, request, route_id=None):
+        """Return all logs for a specific route from all users."""
+        logs = RouteLog.objects.filter(
+            route_id=route_id
+        ).select_related('route', 'climber').order_by('-logged_at')
+        serializer = self.get_serializer(logs, many=True)
+        return Response(serializer.data)
+
 
 # =============================================================================
 # Classes & Bookings
 # =============================================================================
 
-class GymClassViewSet(viewsets.ReadOnlyModelViewSet):
+class GymClassViewSet(viewsets.ModelViewSet):
     serializer_class = GymClassSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
+    def get_permissions(self):
+        if self.action in ['list', 'retrieve']:
+            return [permissions.IsAuthenticatedOrReadOnly()]
+        return [IsStaffRole()]
 
     def get_queryset(self):
         queryset = GymClass.objects.filter(is_active=True).prefetch_related('schedules')

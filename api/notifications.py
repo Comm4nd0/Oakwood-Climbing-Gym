@@ -36,7 +36,7 @@ def send_booking_confirmation(booking):
         f'on {booking.date} has been confirmed.'
     )
     # In production, retrieve the user's FCM token from their profile
-    logger.info(f'Booking confirmation for {booking.member.username}: {body}')
+    logger.info(f'Booking confirmation for {booking.member.email}: {body}')
 
 
 def send_announcement_notification(announcement):

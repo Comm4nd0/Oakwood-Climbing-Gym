@@ -1,5 +1,5 @@
+from django.contrib.auth import get_user_model
 from django.test import TestCase
-from django.contrib.auth.models import User
 from rest_framework.test import APIClient
 from rest_framework import status
 from datetime import date
@@ -11,10 +11,13 @@ from .models import (
 )
 
 
+User = get_user_model()
+
+
 class ClimbingRouteAPITest(TestCase):
     def setUp(self):
         self.client = APIClient()
-        self.user = User.objects.create_user(username='testclimber', password='testpass123')
+        self.user = User.objects.create_user(email='testclimber@example.com', password='testpass123')
         self.wall = WallSection.objects.create(name='Test Wall', wall_type='bouldering')
         self.route = ClimbingRoute.objects.create(
             name='Test Route', grade='f4', grade_system='font',
@@ -41,7 +44,7 @@ class ClimbingRouteAPITest(TestCase):
 class RouteLogAPITest(TestCase):
     def setUp(self):
         self.client = APIClient()
-        self.user = User.objects.create_user(username='testclimber', password='testpass123')
+        self.user = User.objects.create_user(email='testclimber@example.com', password='testpass123')
         self.wall = WallSection.objects.create(name='Test Wall', wall_type='bouldering')
         self.route = ClimbingRoute.objects.create(
             name='Test Route', grade='f4', grade_system='font',
@@ -76,7 +79,7 @@ class RouteLogAPITest(TestCase):
 class MembershipAPITest(TestCase):
     def setUp(self):
         self.client = APIClient()
-        self.user = User.objects.create_user(username='testmember', password='testpass123')
+        self.user = User.objects.create_user(email='testmember@example.com', password='testpass123')
         self.plan = MembershipPlan.objects.create(
             name='Monthly Adult', plan_type='monthly_adult',
             price=Decimal('45.00'), is_recurring=True,
@@ -112,7 +115,7 @@ class MembershipAPITest(TestCase):
 class CheckInAPITest(TestCase):
     def setUp(self):
         self.client = APIClient()
-        self.staff_user = User.objects.create_user(username='staffmember', password='testpass123')
+        self.staff_user = User.objects.create_user(email='staffmember@example.com', password='testpass123')
         MemberProfile.objects.create(user=self.staff_user, role='duty_manager')
         CapacitySetting.objects.create(max_capacity=100, peak_capacity=80)
 
@@ -123,7 +126,7 @@ class CheckInAPITest(TestCase):
         self.assertIn('percentage', response.data)
 
     def test_checkin_requires_staff(self):
-        regular_user = User.objects.create_user(username='regular', password='testpass123')
+        regular_user = User.objects.create_user(email='regular@example.com', password='testpass123')
         MemberProfile.objects.create(user=regular_user, role='member')
         self.client.force_authenticate(user=regular_user)
         response = self.client.post('/api/checkins/', {
@@ -144,7 +147,7 @@ class CheckInAPITest(TestCase):
 class BookingAPITest(TestCase):
     def setUp(self):
         self.client = APIClient()
-        self.user = User.objects.create_user(username='testclimber', password='testpass123')
+        self.user = User.objects.create_user(email='testclimber@example.com', password='testpass123')
         self.gym_class = GymClass.objects.create(
             name='Boulder Taster', class_type='boulder_taster',
             description='Learn the basics', difficulty='beginner',
@@ -185,9 +188,9 @@ class BookingAPITest(TestCase):
 class SafetySignOffAPITest(TestCase):
     def setUp(self):
         self.client = APIClient()
-        self.staff = User.objects.create_user(username='instructor', password='testpass123')
+        self.staff = User.objects.create_user(email='instructor@example.com', password='testpass123')
         MemberProfile.objects.create(user=self.staff, role='instructor')
-        self.member = User.objects.create_user(username='climber', password='testpass123')
+        self.member = User.objects.create_user(email='climber@example.com', password='testpass123')
 
     def test_create_signoff_as_staff(self):
         self.client.force_authenticate(user=self.staff)

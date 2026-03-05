@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/api_service.dart';
 import '../models/route_log.dart';
+import '../utils/grade_converter.dart';
 
 class LogbookScreen extends StatefulWidget {
   const LogbookScreen({super.key});
@@ -114,7 +115,7 @@ class _LogbookScreenState extends State<LogbookScreen> {
                   child: ListTile(
                     leading: _attemptIcon(log.attemptType),
                     title: Text(log.routeName),
-                    subtitle: Text('${log.routeGrade} - ${log.attemptTypeDisplay}'),
+                    subtitle: Text('${GradeConverter.dualGradeDisplay(log.routeGrade, log.routeGradeSystem)} - ${log.attemptTypeDisplay}'),
                     trailing: log.rating != null
                         ? Row(
                             mainAxisSize: MainAxisSize.min,

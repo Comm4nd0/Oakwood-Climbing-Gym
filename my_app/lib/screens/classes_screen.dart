@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import '../services/api_service.dart';
 import '../models/gym_class.dart';
 import '../widgets/class_card.dart';
+import 'add_class_screen.dart';
+import 'class_detail_screen.dart';
 
 class ClassesScreen extends StatefulWidget {
   const ClassesScreen({super.key});
@@ -15,14 +17,15 @@ class _ClassesScreenState extends State<ClassesScreen> {
   List<GymClass> _classes = [];
   bool _isLoading = true;
   String? _error;
+  bool _isStaff = false;
 
   @override
   void initState() {
     super.initState();
-    _loadClasses();
+    _loadData();
   }
 
-  Future<void> _loadClasses() async {
+  Future<void> _loadData() async {
     setState(() {
       _isLoading = true;
       _error = null;
@@ -30,9 +33,16 @@ class _ClassesScreenState extends State<ClassesScreen> {
 
     try {
       final apiService = context.read<ApiService>();
-      final classes = await apiService.getClasses();
+      final results = await Future.wait([
+        apiService.getClasses(),
+        apiService.getProfile().catchError((_) => <String, dynamic>{}),
+      ]);
+      final classes = results[0] as List<GymClass>;
+      final profile = results[1] as Map<String, dynamic>;
+
       setState(() {
         _classes = classes;
+        _isStaff = profile['is_staff_role'] == true;
         _isLoading = false;
       });
     } catch (e) {
@@ -43,12 +53,28 @@ class _ClassesScreenState extends State<ClassesScreen> {
     }
   }
 
+  Future<void> _openAddClass() async {
+    final created = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(builder: (_) => const AddClassScreen()),
+    );
+    if (created == true) {
+      _loadData();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Classes')),
+      floatingActionButton: _isStaff
+          ? FloatingActionButton(
+              onPressed: _openAddClass,
+              child: const Icon(Icons.add),
+            )
+          : null,
       body: RefreshIndicator(
-        onRefresh: _loadClasses,
+        onRefresh: _loadData,
         child: _buildBody(),
       ),
     );
@@ -69,7 +95,7 @@ class _ClassesScreenState extends State<ClassesScreen> {
             Text(_error!, style: const TextStyle(color: Colors.grey)),
             const SizedBox(height: 16),
             ElevatedButton(
-              onPressed: _loadClasses,
+              onPressed: _loadData,
               child: const Text('Retry'),
             ),
           ],
@@ -87,7 +113,18 @@ class _ClassesScreenState extends State<ClassesScreen> {
       padding: const EdgeInsets.all(8),
       itemCount: _classes.length,
       itemBuilder: (context, index) {
-        return ClassCard(gymClass: _classes[index]);
+        final gymClass = _classes[index];
+        return ClassCard(
+          gymClass: gymClass,
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => ClassDetailScreen(gymClass: gymClass),
+              ),
+            );
+          },
+        );
       },
     );
   }

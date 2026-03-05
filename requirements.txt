@@ -2,6 +2,7 @@ Django==5.2.10
 djangorestframework
 djoser
 django-cors-headers
+django-extensions
 python-dotenv
 django-storages
 boto3

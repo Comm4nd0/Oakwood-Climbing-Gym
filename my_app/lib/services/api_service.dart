@@ -37,6 +37,43 @@ class ApiService {
     throw Exception('Failed to load profile');
   }
 
+  Future<Map<String, dynamic>> uploadProfileImage(String filePath) async {
+    final request = http.MultipartRequest(
+      'PATCH',
+      Uri.parse(ApiConstants.profile),
+    );
+    request.headers['Authorization'] = 'Token ${_getToken()}';
+    request.files.add(await http.MultipartFile.fromPath('profile_image', filePath));
+    final streamedResponse = await request.send();
+    final response = await http.Response.fromStream(streamedResponse);
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    }
+    throw Exception('Failed to upload profile image');
+  }
+
+  // ============ Waivers & Safety ============
+
+  Future<List<Map<String, dynamic>>> getWaivers() async {
+    final response = await http.get(Uri.parse(ApiConstants.waivers), headers: _headers);
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      final results = data['results'] as List? ?? data as List;
+      return results.cast<Map<String, dynamic>>();
+    }
+    throw Exception('Failed to load waivers');
+  }
+
+  Future<List<Map<String, dynamic>>> getSafetySignoffs() async {
+    final response = await http.get(Uri.parse(ApiConstants.safetySignoffs), headers: _headers);
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      final results = data['results'] as List? ?? data as List;
+      return results.cast<Map<String, dynamic>>();
+    }
+    throw Exception('Failed to load safety sign-offs');
+  }
+
   // ============ Capacity (public) ============
 
   Future<Capacity> getCapacity() async {
@@ -126,6 +163,38 @@ class ApiService {
     throw Exception('Failed to load classes');
   }
 
+  Future<GymClass> createClass({
+    required String name,
+    required String classType,
+    required String description,
+    required String difficulty,
+    required String ageGroup,
+    required int maxParticipants,
+    required int durationMinutes,
+    required double price,
+    bool includesShoeHire = false,
+  }) async {
+    final response = await http.post(
+      Uri.parse(ApiConstants.classes),
+      headers: _headers,
+      body: jsonEncode({
+        'name': name,
+        'class_type': classType,
+        'description': description,
+        'difficulty': difficulty,
+        'age_group': ageGroup,
+        'max_participants': maxParticipants,
+        'duration_minutes': durationMinutes,
+        'price': price.toStringAsFixed(2),
+        'includes_shoe_hire': includesShoeHire,
+      }),
+    );
+    if (response.statusCode == 201) {
+      return GymClass.fromJson(jsonDecode(response.body));
+    }
+    throw Exception('Failed to create class');
+  }
+
   // ============ Announcements ============
 
   Future<List<Announcement>> getAnnouncements() async {
@@ -142,6 +211,18 @@ class ApiService {
     final response = await http.get(Uri.parse(ApiConstants.logs), headers: _headers);
     if (response.statusCode == 200) {
       return _parseResults(response.body, RouteLog.fromJson);
+    }
+    throw Exception('Failed to load route logs');
+  }
+
+  Future<List<RouteLog>> getRouteLogsForRoute(int routeId) async {
+    final response = await http.get(
+      Uri.parse('${ApiConstants.logs}for-route/$routeId/'),
+      headers: _headers,
+    );
+    if (response.statusCode == 200) {
+      final List<dynamic> data = jsonDecode(response.body);
+      return data.map((j) => RouteLog.fromJson(j)).toList();
     }
     throw Exception('Failed to load route logs');
   }
