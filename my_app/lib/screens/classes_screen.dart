@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../services/auth_service.dart';
 import '../services/api_service.dart';
 import '../models/gym_class.dart';
 import '../widgets/class_card.dart';
@@ -33,12 +34,18 @@ class _ClassesScreenState extends State<ClassesScreen> {
 
     try {
       final apiService = context.read<ApiService>();
-      final results = await Future.wait([
-        apiService.getClasses(),
-        apiService.getProfile().catchError((_) => <String, dynamic>{}),
-      ]);
+      final isAuthenticated = context.read<AuthService>().isAuthenticated;
+      final futures = <Future>[apiService.getClasses()];
+      if (isAuthenticated) {
+        futures.add(
+          apiService.getProfile().catchError((_) => <String, dynamic>{}),
+        );
+      }
+      final results = await Future.wait(futures);
       final classes = results[0] as List<GymClass>;
-      final profile = results[1] as Map<String, dynamic>;
+      final profile = isAuthenticated
+          ? results[1] as Map<String, dynamic>
+          : <String, dynamic>{};
 
       setState(() {
         _classes = classes;
