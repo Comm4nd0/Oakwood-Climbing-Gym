@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/climbing_route.dart';
 import '../models/route_log.dart';
+import '../services/auth_service.dart';
 import '../services/api_service.dart';
 import '../constants/api_constants.dart';
 import '../utils/grade_converter.dart';
+import 'login_screen.dart';
 
 class RouteDetailScreen extends StatefulWidget {
   final ClimbingRoute route;
@@ -27,7 +29,14 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
     _loadLogs();
   }
 
+  bool get _isAuthenticated =>
+      context.read<AuthService>().isAuthenticated;
+
   Future<void> _loadLogs() async {
+    if (!_isAuthenticated) {
+      setState(() => _logsLoading = false);
+      return;
+    }
     try {
       final api = context.read<ApiService>();
       final results = await Future.wait([
@@ -394,9 +403,16 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
 
     return Scaffold(
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: _showLogDialog,
-        icon: const Icon(Icons.add),
-        label: const Text('Log Send'),
+        onPressed: _isAuthenticated
+            ? _showLogDialog
+            : () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const LoginScreen()),
+                );
+              },
+        icon: Icon(_isAuthenticated ? Icons.add : Icons.login),
+        label: Text(_isAuthenticated ? 'Log Send' : 'Sign In to Log'),
       ),
       body: CustomScrollView(
         slivers: [
@@ -520,103 +536,125 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
                     ),
                   ],
 
-                  // Your logs
-                  const SizedBox(height: 28),
-                  Text(
-                    'Your Log',
-                    style: Theme.of(context)
-                        .textTheme
-                        .titleMedium
-                        ?.copyWith(fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 12),
+                  // Your logs (only for authenticated users)
+                  if (_isAuthenticated) ...[
+                    const SizedBox(height: 28),
+                    Text(
+                      'Your Log',
+                      style: Theme.of(context)
+                          .textTheme
+                          .titleMedium
+                          ?.copyWith(fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 12),
 
-                  if (_logsLoading)
-                    const Center(
-                      child: Padding(
-                        padding: EdgeInsets.all(16),
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      ),
-                    )
-                  else if (_myLogs.isEmpty)
+                    if (_logsLoading)
+                      const Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(16),
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                      )
+                    else if (_myLogs.isEmpty)
+                      Card(
+                        color: Colors.grey.shade50,
+                        child: const Padding(
+                          padding: EdgeInsets.all(20),
+                          child: Row(
+                            children: [
+                              Icon(Icons.info_outline, color: Colors.grey),
+                              SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  "You haven't logged this route yet. Tap the button below to record your send!",
+                                  style: TextStyle(color: Colors.grey),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      )
+                    else
+                      ..._myLogs.map((log) => _buildLogCard(log, showName: false)),
+
+                    // Community sends
+                    const SizedBox(height: 28),
+                    Row(
+                      children: [
+                        Text(
+                          'Community Sends',
+                          style: Theme.of(context)
+                              .textTheme
+                              .titleMedium
+                              ?.copyWith(fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(width: 8),
+                        if (!_logsLoading)
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .primary
+                                  .withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              '${_communityLogs.length}',
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+
+                    if (!_logsLoading && _communityLogs.isEmpty)
+                      Card(
+                        color: Colors.grey.shade50,
+                        child: const Padding(
+                          padding: EdgeInsets.all(20),
+                          child: Row(
+                            children: [
+                              Icon(Icons.group_outlined, color: Colors.grey),
+                              SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  'No one else has logged this route yet. Be the first!',
+                                  style: TextStyle(color: Colors.grey),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      )
+                    else if (!_logsLoading)
+                      ..._communityLogs.map((log) => _buildLogCard(log, showName: true)),
+                  ] else ...[
+                    const SizedBox(height: 28),
                     Card(
                       color: Colors.grey.shade50,
                       child: const Padding(
                         padding: EdgeInsets.all(20),
                         child: Row(
                           children: [
-                            Icon(Icons.info_outline, color: Colors.grey),
+                            Icon(Icons.login, color: Colors.grey),
                             SizedBox(width: 12),
                             Expanded(
                               child: Text(
-                                "You haven't logged this route yet. Tap the button below to record your send!",
+                                'Sign in to log your sends and see community activity.',
                                 style: TextStyle(color: Colors.grey),
                               ),
                             ),
                           ],
                         ),
                       ),
-                    )
-                  else
-                    ..._myLogs.map((log) => _buildLogCard(log, showName: false)),
-
-                  // Community sends
-                  const SizedBox(height: 28),
-                  Row(
-                    children: [
-                      Text(
-                        'Community Sends',
-                        style: Theme.of(context)
-                            .textTheme
-                            .titleMedium
-                            ?.copyWith(fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(width: 8),
-                      if (!_logsLoading)
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: Theme.of(context)
-                                .colorScheme
-                                .primary
-                                .withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Text(
-                            '${_communityLogs.length}',
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.bold,
-                              color: Theme.of(context).colorScheme.primary,
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-
-                  if (!_logsLoading && _communityLogs.isEmpty)
-                    Card(
-                      color: Colors.grey.shade50,
-                      child: const Padding(
-                        padding: EdgeInsets.all(20),
-                        child: Row(
-                          children: [
-                            Icon(Icons.group_outlined, color: Colors.grey),
-                            SizedBox(width: 12),
-                            Expanded(
-                              child: Text(
-                                'No one else has logged this route yet. Be the first!',
-                                style: TextStyle(color: Colors.grey),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    )
-                  else if (!_logsLoading)
-                    ..._communityLogs.map((log) => _buildLogCard(log, showName: true)),
+                    ),
+                  ],
 
                   // Spacer for FAB
                   const SizedBox(height: 80),

@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../services/auth_service.dart';
 import '../services/api_service.dart';
 import '../models/capacity.dart';
 import 'routes_screen.dart';
 import 'classes_screen.dart';
 import 'logbook_screen.dart';
 import 'profile_screen.dart';
+import 'login_screen.dart';
+import 'register_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -17,18 +20,42 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
 
-  final List<Widget> _screens = const [
-    DashboardTab(),
-    RoutesScreen(),
-    ClassesScreen(),
-    LogbookScreen(),
-    ProfileScreen(),
-  ];
+  Widget _screenForIndex(int index, bool isAuthenticated) {
+    switch (index) {
+      case 0:
+        return const DashboardTab();
+      case 1:
+        return const RoutesScreen();
+      case 2:
+        return const ClassesScreen();
+      case 3:
+        return isAuthenticated
+            ? const LogbookScreen()
+            : const _AuthRequiredScreen(
+                title: 'Logbook',
+                message: 'Sign in to track your climbs and view your progress.',
+                icon: Icons.book,
+              );
+      case 4:
+        return isAuthenticated
+            ? const ProfileScreen()
+            : const _AuthRequiredScreen(
+                title: 'Profile',
+                message:
+                    'Sign in to view your profile, membership, and bookings.',
+                icon: Icons.person,
+              );
+      default:
+        return const DashboardTab();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    final isAuthenticated = context.watch<AuthService>().isAuthenticated;
+
     return Scaffold(
-      body: _screens[_currentIndex],
+      body: _screenForIndex(_currentIndex, isAuthenticated),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
         onTap: (index) => setState(() => _currentIndex = index),
@@ -40,6 +67,73 @@ class _HomeScreenState extends State<HomeScreen> {
           BottomNavigationBarItem(icon: Icon(Icons.book), label: 'Logbook'),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
         ],
+      ),
+    );
+  }
+}
+
+/// Shown in place of auth-required tabs when the user is not logged in.
+class _AuthRequiredScreen extends StatelessWidget {
+  final String title;
+  final String message;
+  final IconData icon;
+
+  const _AuthRequiredScreen({
+    required this.title,
+    required this.message,
+    required this.icon,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text(title)),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, size: 64, color: Colors.grey.shade400),
+              const SizedBox(height: 24),
+              Text(
+                message,
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      color: Colors.grey.shade600,
+                    ),
+              ),
+              const SizedBox(height: 32),
+              SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const LoginScreen(),
+                      ),
+                    );
+                  },
+                  child: const Text('Sign In'),
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const RegisterScreen(),
+                    ),
+                  );
+                },
+                child: const Text("Don't have an account? Sign Up"),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -77,6 +171,8 @@ class _DashboardTabState extends State<DashboardTab> {
 
   @override
   Widget build(BuildContext context) {
+    final isAuthenticated = context.watch<AuthService>().isAuthenticated;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Oakwood Climbing Centre'),
@@ -105,12 +201,16 @@ class _DashboardTabState extends State<DashboardTab> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Welcome Back!',
+                              isAuthenticated
+                                  ? 'Welcome Back!'
+                                  : 'Welcome to Oakwood!',
                               style: Theme.of(context).textTheme.titleLarge,
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              'Ready to climb today?',
+                              isAuthenticated
+                                  ? 'Ready to climb today?'
+                                  : 'Your local climbing centre',
                               style: Theme.of(context).textTheme.bodyMedium,
                             ),
                           ],
@@ -120,6 +220,62 @@ class _DashboardTabState extends State<DashboardTab> {
                   ),
                 ),
               ),
+
+              // Sign in prompt for guests
+              if (!isAuthenticated) ...[
+                const SizedBox(height: 12),
+                Card(
+                  color: Theme.of(context).colorScheme.primaryContainer,
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      children: [
+                        Text(
+                          'Sign in to book classes, track your climbs, and manage your membership.',
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onPrimaryContainer,
+                              ),
+                        ),
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: ElevatedButton(
+                                onPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => const LoginScreen(),
+                                    ),
+                                  );
+                                },
+                                child: const Text('Sign In'),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: OutlinedButton(
+                                onPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => const RegisterScreen(),
+                                    ),
+                                  );
+                                },
+                                child: const Text('Sign Up'),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+
               const SizedBox(height: 16),
 
               // Live Capacity

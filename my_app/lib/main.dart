@@ -4,7 +4,6 @@ import 'constants/app_theme.dart';
 import 'services/auth_service.dart';
 import 'services/api_service.dart';
 import 'screens/home_screen.dart';
-import 'screens/login_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -31,14 +30,7 @@ class OakwoodClimbingApp extends StatelessWidget {
         title: 'Oakwood Climbing Gym',
         theme: AppTheme.lightTheme,
         debugShowCheckedModeBanner: false,
-        home: Consumer<AuthService>(
-          builder: (context, auth, _) {
-            if (auth.isAuthenticated) {
-              return const HomeScreen();
-            }
-            return const LoginScreen();
-          },
-        ),
+        home: const HomeScreen(),
       ),
     );
   }
