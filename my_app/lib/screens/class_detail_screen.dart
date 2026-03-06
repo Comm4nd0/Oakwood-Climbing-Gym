@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/gym_class.dart';
+import '../services/auth_service.dart';
 import '../services/api_service.dart';
 import '../constants/api_constants.dart';
+import 'login_screen.dart';
 
 class ClassDetailScreen extends StatelessWidget {
   final GymClass gymClass;
@@ -194,17 +196,36 @@ class ClassDetailScreen extends StatelessWidget {
 
                   // Book button
                   const SizedBox(height: 32),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 52,
-                    child: ElevatedButton.icon(
-                      onPressed: () => _showBookingSheet(context),
-                      icon: const Icon(Icons.event_available),
-                      label: const Text(
-                        'Book a Session',
-                        style: TextStyle(fontSize: 16),
-                      ),
-                    ),
+                  Builder(
+                    builder: (context) {
+                      final isAuthenticated =
+                          context.watch<AuthService>().isAuthenticated;
+                      return SizedBox(
+                        width: double.infinity,
+                        height: 52,
+                        child: ElevatedButton.icon(
+                          onPressed: isAuthenticated
+                              ? () => _showBookingSheet(context)
+                              : () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => const LoginScreen(),
+                                    ),
+                                  );
+                                },
+                          icon: Icon(isAuthenticated
+                              ? Icons.event_available
+                              : Icons.login),
+                          label: Text(
+                            isAuthenticated
+                                ? 'Book a Session'
+                                : 'Sign In to Book',
+                            style: const TextStyle(fontSize: 16),
+                          ),
+                        ),
+                      );
+                    },
                   ),
 
                   const SizedBox(height: 24),
