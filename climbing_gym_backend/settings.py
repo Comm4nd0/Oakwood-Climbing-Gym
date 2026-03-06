@@ -28,10 +28,17 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'djoser',
     'corsheaders',
-    'django_extensions',
     # Local
     'api',
 ]
+
+# Dev-only apps (not installed in production)
+if DEBUG:
+    try:
+        import django_extensions  # noqa: F401
+        INSTALLED_APPS.append('django_extensions')
+    except ImportError:
+        pass
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
