@@ -4,9 +4,9 @@ class AppTheme {
   // Oakwood Climbing Centre brand palette
   // Inspired by the climbing wall colors — a bright, kid-friendly palette
   // balanced with clean white space (designed by The Creative Donut)
-  static const Color primaryColor = Color(0xFF00897B);     // Teal (main brand)
-  static const Color primaryDark = Color(0xFF00695C);      // Dark teal
-  static const Color secondaryColor = Color(0xFFF57C00);   // Vibrant orange (accent)
+  static const Color primaryColor = Color(0xFF24272D);     // Dark charcoal (main brand)
+  static const Color primaryDark = Color(0xFF1A1C21);      // Deeper charcoal
+  static const Color secondaryColor = Color(0xFFEB744A);   // Coral orange (accent)
   static const Color accentYellow = Color(0xFFFFCA28);     // Bright yellow
   static const Color accentPink = Color(0xFFEC407A);       // Playful pink
   static const Color accentBlue = Color(0xFF42A5F5);       // Bright blue

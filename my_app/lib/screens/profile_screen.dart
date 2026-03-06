@@ -11,6 +11,7 @@ import 'my_bookings_screen.dart';
 import 'safety_signoffs_screen.dart';
 import 'waiver_screen.dart';
 import 'gym_info_screen.dart';
+import 'support_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -314,6 +315,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       onTap: () => Navigator.push(
                         context,
                         MaterialPageRoute(builder: (_) => const GymInfoScreen()),
+                      ),
+                    ),
+                    _ProfileMenuItem(
+                      icon: Icons.support_agent,
+                      title: 'Support',
+                      subtitle: 'Contact us or view your tickets',
+                      iconColor: Colors.teal,
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => SupportScreen(isStaff: _isStaff),
+                        ),
                       ),
                     ),
                     const SizedBox(height: 24),

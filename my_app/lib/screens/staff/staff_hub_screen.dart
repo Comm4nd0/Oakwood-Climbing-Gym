@@ -4,6 +4,7 @@ import '../../services/api_service.dart';
 import '../../models/capacity.dart';
 import 'checkin_screen.dart';
 import 'shifts_screen.dart';
+import '../support_screen.dart';
 
 class StaffHubScreen extends StatefulWidget {
   const StaffHubScreen({super.key});
@@ -177,6 +178,18 @@ class _StaffHubScreenState extends State<StaffHubScreen> {
                 subtitle: 'Search and manage member profiles',
                 color: Colors.teal,
                 onTap: () {},
+              ),
+              _StaffActionTile(
+                icon: Icons.support_agent,
+                title: 'Support Tickets',
+                subtitle: 'View and respond to member tickets',
+                color: Colors.deepOrange,
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const SupportScreen(isStaff: true),
+                  ),
+                ),
               ),
             ],
           ),

@@ -10,6 +10,7 @@ from .models import (
     GymClass, ClassSchedule, Booking, BirthdayPartyBooking,
     StaffShift, StaffQualification,
     Announcement, Event, GymInfo,
+    SupportTicket, TicketMessage,
 )
 
 User = get_user_model()
@@ -178,3 +179,25 @@ class EventAdmin(admin.ModelAdmin):
 @admin.register(GymInfo)
 class GymInfoAdmin(admin.ModelAdmin):
     list_display = ['name', 'phone', 'email']
+
+
+# Support Tickets
+class TicketMessageInline(admin.TabularInline):
+    model = TicketMessage
+    extra = 0
+    readonly_fields = ['sender', 'created_at']
+
+
+@admin.register(SupportTicket)
+class SupportTicketAdmin(admin.ModelAdmin):
+    list_display = ['id', 'subject', 'user', 'category', 'status', 'priority', 'created_at', 'updated_at']
+    list_filter = ['status', 'category', 'priority']
+    search_fields = ['subject', 'user__email']
+    inlines = [TicketMessageInline]
+
+
+@admin.register(TicketMessage)
+class TicketMessageAdmin(admin.ModelAdmin):
+    list_display = ['id', 'ticket', 'sender', 'is_staff_reply', 'created_at']
+    list_filter = ['is_staff_reply']
+    search_fields = ['body', 'sender__email']

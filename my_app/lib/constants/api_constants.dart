@@ -1,5 +1,9 @@
 class ApiConstants {
-  static const String baseUrl = 'http://127.0.0.1:8000';
+  // Toggle between local dev and production server
+  static const bool _useProduction = false;
+  static const String _localUrl = 'http://127.0.0.1:8000';
+  static const String _prodUrl = 'http://178.104.29.66:8001';
+  static const String baseUrl = _useProduction ? _prodUrl : _localUrl;
   static const String apiUrl = '$baseUrl/api';
   static const String authUrl = '$baseUrl/auth';
 
@@ -37,6 +41,9 @@ class ApiConstants {
   static const String announcements = '$apiUrl/announcements/';
   static const String events = '$apiUrl/events/';
   static const String gymInfo = '$apiUrl/gym-info/';
+
+  // Support
+  static const String supportTickets = '$apiUrl/support-tickets/';
 
   // Auth Endpoints
   static const String login = '$authUrl/token/login/';

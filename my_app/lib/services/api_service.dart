@@ -10,6 +10,7 @@ import '../models/booking.dart';
 import '../models/staff_shift.dart';
 import '../models/capacity.dart';
 import '../models/check_in.dart';
+import '../models/support_ticket.dart';
 
 class ApiService {
   final String? Function() _getToken;
@@ -363,5 +364,75 @@ class ApiService {
     );
     if (response.statusCode == 200) return jsonDecode(response.body);
     throw Exception('Failed to request cancellation');
+  }
+
+  // ============ Support Tickets ============
+
+  Future<List<SupportTicket>> getSupportTickets() async {
+    final response = await http.get(
+      Uri.parse(ApiConstants.supportTickets),
+      headers: _headers,
+    );
+    if (response.statusCode == 200) {
+      return _parseResults(response.body, SupportTicket.fromJson);
+    }
+    throw Exception('Failed to load support tickets');
+  }
+
+  Future<SupportTicket> getSupportTicket(int id) async {
+    final response = await http.get(
+      Uri.parse('${ApiConstants.supportTickets}$id/'),
+      headers: _headers,
+    );
+    if (response.statusCode == 200) {
+      return SupportTicket.fromJson(jsonDecode(response.body));
+    }
+    throw Exception('Failed to load support ticket');
+  }
+
+  Future<SupportTicket> createSupportTicket({
+    required String subject,
+    required String category,
+    required String priority,
+    required String message,
+  }) async {
+    final response = await http.post(
+      Uri.parse(ApiConstants.supportTickets),
+      headers: _headers,
+      body: jsonEncode({
+        'subject': subject,
+        'category': category,
+        'priority': priority,
+        'message': message,
+      }),
+    );
+    if (response.statusCode == 201) {
+      return SupportTicket.fromJson(jsonDecode(response.body));
+    }
+    throw Exception('Failed to create support ticket');
+  }
+
+  Future<TicketMessage> replySupportTicket(int ticketId, String body) async {
+    final response = await http.post(
+      Uri.parse('${ApiConstants.supportTickets}$ticketId/reply/'),
+      headers: _headers,
+      body: jsonEncode({'body': body}),
+    );
+    if (response.statusCode == 201) {
+      return TicketMessage.fromJson(jsonDecode(response.body));
+    }
+    throw Exception('Failed to send reply');
+  }
+
+  Future<SupportTicket> updateTicketStatus(int ticketId, String status) async {
+    final response = await http.post(
+      Uri.parse('${ApiConstants.supportTickets}$ticketId/update-status/'),
+      headers: _headers,
+      body: jsonEncode({'status': status}),
+    );
+    if (response.statusCode == 200) {
+      return SupportTicket.fromJson(jsonDecode(response.body));
+    }
+    throw Exception('Failed to update ticket status');
   }
 }
