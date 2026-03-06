@@ -640,3 +640,59 @@ class GymInfo(models.Model):
     class Meta:
         verbose_name = 'Gym Info'
         verbose_name_plural = 'Gym Info'
+
+
+# =============================================================================
+# Support Tickets
+# =============================================================================
+
+class SupportTicket(models.Model):
+    """Support tickets submitted by members."""
+    CATEGORY_CHOICES = [
+        ('general', 'General Enquiry'),
+        ('billing', 'Billing & Payments'),
+        ('classes', 'Classes & Bookings'),
+        ('facilities', 'Facilities & Equipment'),
+        ('feedback', 'Feedback & Suggestions'),
+        ('other', 'Other'),
+    ]
+    STATUS_CHOICES = [
+        ('open', 'Open'),
+        ('in_progress', 'In Progress'),
+        ('resolved', 'Resolved'),
+        ('closed', 'Closed'),
+    ]
+    PRIORITY_CHOICES = [
+        ('low', 'Low'),
+        ('medium', 'Medium'),
+        ('high', 'High'),
+    ]
+
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='support_tickets')
+    subject = models.CharField(max_length=200)
+    category = models.CharField(max_length=20, choices=CATEGORY_CHOICES, default='general')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='open')
+    priority = models.CharField(max_length=10, choices=PRIORITY_CHOICES, default='medium')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"#{self.pk} {self.subject} ({self.get_status_display()})"
+
+    class Meta:
+        ordering = ['-updated_at']
+
+
+class TicketMessage(models.Model):
+    """Individual messages within a support ticket thread."""
+    ticket = models.ForeignKey(SupportTicket, on_delete=models.CASCADE, related_name='messages')
+    sender = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='ticket_messages')
+    body = models.TextField()
+    is_staff_reply = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Message on #{self.ticket_id} by {self.sender.email}"
+
+    class Meta:
+        ordering = ['created_at']

@@ -11,6 +11,7 @@ from .models import (
     GymClass, ClassSchedule, Booking, BirthdayPartyBooking,
     StaffShift, StaffQualification,
     Announcement, Event, GymInfo,
+    SupportTicket, TicketMessage,
 )
 from .serializers import (
     MemberProfileSerializer, WaiverSerializer, SafetySignOffSerializer,
@@ -20,6 +21,8 @@ from .serializers import (
     GymClassSerializer, BookingSerializer, BirthdayPartyBookingSerializer,
     StaffShiftSerializer, StaffQualificationSerializer,
     AnnouncementSerializer, EventSerializer, GymInfoSerializer,
+    SupportTicketSerializer, SupportTicketListSerializer,
+    SupportTicketCreateSerializer, TicketMessageSerializer,
 )
 
 
@@ -401,3 +404,90 @@ class GymInfoViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = GymInfoSerializer
     permission_classes = [permissions.AllowAny]
     queryset = GymInfo.objects.all()
+
+
+# =============================================================================
+# Support Tickets
+# =============================================================================
+
+class SupportTicketViewSet(viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        profile = getattr(user, 'profile', None)
+        if profile and profile.is_staff_role:
+            queryset = SupportTicket.objects.all()
+        else:
+            queryset = SupportTicket.objects.filter(user=user)
+
+        status_filter = self.request.query_params.get('status')
+        if status_filter:
+            queryset = queryset.filter(status=status_filter)
+        category_filter = self.request.query_params.get('category')
+        if category_filter:
+            queryset = queryset.filter(category=category_filter)
+
+        return queryset.select_related('user').prefetch_related('messages')
+
+    def get_serializer_class(self):
+        if self.action == 'create':
+            return SupportTicketCreateSerializer
+        if self.action == 'list':
+            return SupportTicketListSerializer
+        return SupportTicketSerializer
+
+    def perform_create(self, serializer):
+        message_body = serializer.validated_data.pop('message')
+        ticket = serializer.save(user=self.request.user)
+        TicketMessage.objects.create(
+            ticket=ticket,
+            sender=self.request.user,
+            body=message_body,
+            is_staff_reply=False,
+        )
+
+    @action(detail=True, methods=['post'])
+    def reply(self, request, pk=None):
+        ticket = self.get_object()
+        body = request.data.get('body')
+        if not body:
+            return Response(
+                {'detail': 'Message body is required.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        profile = getattr(request.user, 'profile', None)
+        is_staff = profile and profile.is_staff_role
+
+        if not is_staff and ticket.user != request.user:
+            return Response(
+                {'detail': 'You can only reply to your own tickets.'},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        message = TicketMessage.objects.create(
+            ticket=ticket,
+            sender=request.user,
+            body=body,
+            is_staff_reply=is_staff,
+        )
+        # Bump updated_at on the ticket
+        ticket.save()
+
+        return Response(TicketMessageSerializer(message).data, status=status.HTTP_201_CREATED)
+
+    @action(detail=True, methods=['post'], url_path='update-status',
+            permission_classes=[permissions.IsAuthenticated, IsStaffRole])
+    def update_status(self, request, pk=None):
+        ticket = self.get_object()
+        new_status = request.data.get('status')
+        valid_statuses = [c[0] for c in SupportTicket.STATUS_CHOICES]
+        if new_status not in valid_statuses:
+            return Response(
+                {'detail': f'Invalid status. Must be one of: {", ".join(valid_statuses)}'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        ticket.status = new_status
+        ticket.save()
+        return Response(SupportTicketSerializer(ticket).data)

@@ -36,6 +36,9 @@ router.register(r'announcements', views.AnnouncementViewSet, basename='announcem
 router.register(r'events', views.EventViewSet, basename='event')
 router.register(r'gym-info', views.GymInfoViewSet, basename='gym-info')
 
+# Support
+router.register(r'support-tickets', views.SupportTicketViewSet, basename='support-ticket')
+
 urlpatterns = [
     path('', include(router.urls)),
 ]

@@ -56,14 +56,13 @@ class _LoginScreenState extends State<LoginScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
-                    Icons.terrain,
-                    size: 80,
-                    color: Theme.of(context).colorScheme.primary,
+                  Image.asset(
+                    'assets/images/oakwood_logo.png',
+                    height: 80,
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'Oakwood\nClimbing Gym',
+                    'Oakwood\nClimbing Centre',
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                           fontWeight: FontWeight.bold,

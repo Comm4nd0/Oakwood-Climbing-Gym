@@ -9,6 +9,7 @@ from .models import (
     GymClass, ClassSchedule, Booking, BirthdayPartyBooking,
     StaffShift, StaffQualification,
     Announcement, Event, GymInfo,
+    SupportTicket, TicketMessage,
 )
 
 
@@ -315,3 +316,81 @@ class GymInfoSerializer(serializers.ModelSerializer):
     class Meta:
         model = GymInfo
         fields = '__all__'
+
+
+# =============================================================================
+# Support Tickets
+# =============================================================================
+
+class TicketMessageSerializer(serializers.ModelSerializer):
+    sender_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = TicketMessage
+        fields = [
+            'id', 'ticket', 'sender', 'sender_name', 'body',
+            'is_staff_reply', 'created_at',
+        ]
+        read_only_fields = ['id', 'ticket', 'sender', 'is_staff_reply', 'created_at']
+
+    def get_sender_name(self, obj):
+        full = obj.sender.get_full_name()
+        return full if full else obj.sender.email.split('@')[0]
+
+
+class SupportTicketSerializer(serializers.ModelSerializer):
+    user_name = serializers.SerializerMethodField()
+    category_display = serializers.CharField(source='get_category_display', read_only=True)
+    status_display = serializers.CharField(source='get_status_display', read_only=True)
+    priority_display = serializers.CharField(source='get_priority_display', read_only=True)
+    messages = TicketMessageSerializer(many=True, read_only=True)
+    message_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = SupportTicket
+        fields = [
+            'id', 'user', 'user_name', 'subject', 'category', 'category_display',
+            'status', 'status_display', 'priority', 'priority_display',
+            'created_at', 'updated_at', 'messages', 'message_count',
+        ]
+        read_only_fields = ['id', 'user', 'status', 'created_at', 'updated_at']
+
+    def get_user_name(self, obj):
+        full = obj.user.get_full_name()
+        return full if full else obj.user.email.split('@')[0]
+
+    def get_message_count(self, obj):
+        return obj.messages.count()
+
+
+class SupportTicketListSerializer(serializers.ModelSerializer):
+    """Lighter serializer for list views (no nested messages)."""
+    user_name = serializers.SerializerMethodField()
+    category_display = serializers.CharField(source='get_category_display', read_only=True)
+    status_display = serializers.CharField(source='get_status_display', read_only=True)
+    priority_display = serializers.CharField(source='get_priority_display', read_only=True)
+    message_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = SupportTicket
+        fields = [
+            'id', 'user', 'user_name', 'subject', 'category', 'category_display',
+            'status', 'status_display', 'priority', 'priority_display',
+            'created_at', 'updated_at', 'message_count',
+        ]
+        read_only_fields = ['id', 'user', 'status', 'created_at', 'updated_at']
+
+    def get_user_name(self, obj):
+        full = obj.user.get_full_name()
+        return full if full else obj.user.email.split('@')[0]
+
+    def get_message_count(self, obj):
+        return obj.messages.count()
+
+
+class SupportTicketCreateSerializer(serializers.ModelSerializer):
+    message = serializers.CharField(write_only=True)
+
+    class Meta:
+        model = SupportTicket
+        fields = ['subject', 'category', 'priority', 'message']

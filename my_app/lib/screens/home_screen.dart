@@ -95,10 +95,9 @@ class _DashboardTabState extends State<DashboardTab> {
                   padding: const EdgeInsets.all(20),
                   child: Row(
                     children: [
-                      Icon(
-                        Icons.terrain,
-                        size: 48,
-                        color: Theme.of(context).colorScheme.primary,
+                      Image.asset(
+                        'assets/images/oakwood_logo.png',
+                        height: 48,
                       ),
                       const SizedBox(width: 16),
                       Expanded(
