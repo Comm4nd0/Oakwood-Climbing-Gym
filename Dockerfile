@@ -29,13 +29,13 @@ COPY --chown=appuser:appuser . .
 RUN mkdir -p /app/staticfiles && chown appuser:appuser /app/staticfiles
 RUN mkdir -p /app/media && chown appuser:appuser /app/media
 
-# Collect static files during build
+USER appuser
+
+# Collect static files as appuser so permissions are correct at runtime
 RUN SECRET_KEY=temp-build-key \
     DB_NAME=temp \
     DB_HOST=localhost \
     python manage.py collectstatic --noinput 2>/dev/null || true
-
-USER appuser
 
 EXPOSE 8000
 
