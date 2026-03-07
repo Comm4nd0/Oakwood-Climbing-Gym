@@ -160,6 +160,8 @@ class WallSectionSerializer(serializers.ModelSerializer):
 class ClimbingRouteSerializer(serializers.ModelSerializer):
     wall_section_name = serializers.CharField(source='wall_section.name', read_only=True)
     color_display = serializers.CharField(source='get_color_display', read_only=True)
+    grade = serializers.CharField(max_length=10, required=False, default='')
+    grade_system = serializers.CharField(required=False, default='font')
 
     class Meta:
         model = ClimbingRoute

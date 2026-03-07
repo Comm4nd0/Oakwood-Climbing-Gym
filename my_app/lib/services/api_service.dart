@@ -149,6 +149,45 @@ class ApiService {
     throw Exception('Failed to load wall sections');
   }
 
+  Future<ClimbingRoute> createRoute({
+    required String name,
+    required String color,
+    required int wallSection,
+    required String setter,
+    required String dateSet,
+    String? description,
+    String? imagePath,
+  }) async {
+    final request = http.MultipartRequest(
+      'POST',
+      Uri.parse(ApiConstants.routes),
+    );
+    request.headers['Authorization'] = 'Token ${_getToken()}';
+
+    request.fields['name'] = name;
+    request.fields['color'] = color;
+    request.fields['wall_section'] = wallSection.toString();
+    request.fields['setter'] = setter;
+    request.fields['date_set'] = dateSet;
+    request.fields['is_active'] = 'true';
+    if (description != null && description.isNotEmpty) {
+      request.fields['description'] = description;
+    }
+
+    if (imagePath != null) {
+      request.files.add(
+        await http.MultipartFile.fromPath('image', imagePath),
+      );
+    }
+
+    final streamedResponse = await request.send();
+    final response = await http.Response.fromStream(streamedResponse);
+    if (response.statusCode == 201) {
+      return ClimbingRoute.fromJson(jsonDecode(response.body));
+    }
+    throw Exception('Failed to create route');
+  }
+
   // ============ Classes ============
 
   Future<List<GymClass>> getClasses({String? type, String? ageGroup}) async {

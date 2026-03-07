@@ -224,9 +224,13 @@ class WallSectionViewSet(viewsets.ReadOnlyModelViewSet):
         )
 
 
-class ClimbingRouteViewSet(viewsets.ReadOnlyModelViewSet):
+class ClimbingRouteViewSet(viewsets.ModelViewSet):
     serializer_class = ClimbingRouteSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
+    def get_permissions(self):
+        if self.action in ['list', 'retrieve']:
+            return [permissions.IsAuthenticatedOrReadOnly()]
+        return [IsStaffRole()]
 
     def get_queryset(self):
         queryset = ClimbingRoute.objects.filter(is_active=True).select_related('wall_section')

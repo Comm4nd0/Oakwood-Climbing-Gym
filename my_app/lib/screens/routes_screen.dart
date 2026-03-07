@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/api_service.dart';
+import '../services/auth_service.dart';
 import '../models/climbing_route.dart';
 import '../utils/grade_converter.dart';
 import '../widgets/route_card.dart';
 import 'route_detail_screen.dart';
+import 'add_route_screen.dart';
 
 class RoutesScreen extends StatefulWidget {
   const RoutesScreen({super.key});
@@ -17,6 +19,7 @@ class _RoutesScreenState extends State<RoutesScreen> {
   List<ClimbingRoute> _routes = [];
   bool _isLoading = true;
   String? _error;
+  bool _isStaff = false;
 
   // Filter / sort state
   String? _selectedColor;
@@ -75,9 +78,22 @@ class _RoutesScreenState extends State<RoutesScreen> {
 
     try {
       final apiService = context.read<ApiService>();
-      final routes = await apiService.getRoutes();
+      final isAuthenticated = context.read<AuthService>().isAuthenticated;
+      final futures = <Future>[apiService.getRoutes()];
+      if (isAuthenticated) {
+        futures.add(
+          apiService.getProfile().catchError((_) => <String, dynamic>{}),
+        );
+      }
+      final results = await Future.wait(futures);
+      final routes = results[0] as List<ClimbingRoute>;
+      final profile = isAuthenticated
+          ? results[1] as Map<String, dynamic>
+          : <String, dynamic>{};
+
       setState(() {
         _routes = routes;
+        _isStaff = profile['is_staff_role'] == true;
         _isLoading = false;
       });
     } catch (e) {
@@ -85,6 +101,16 @@ class _RoutesScreenState extends State<RoutesScreen> {
         _error = 'Failed to load routes. Pull to refresh.';
         _isLoading = false;
       });
+    }
+  }
+
+  Future<void> _openAddRoute() async {
+    final created = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(builder: (_) => const AddRouteScreen()),
+    );
+    if (created == true) {
+      _loadRoutes();
     }
   }
 
@@ -271,6 +297,12 @@ class _RoutesScreenState extends State<RoutesScreen> {
           ),
         ],
       ),
+      floatingActionButton: _isStaff
+          ? FloatingActionButton(
+              onPressed: _openAddRoute,
+              child: const Icon(Icons.add),
+            )
+          : null,
       body: RefreshIndicator(
         onRefresh: _loadRoutes,
         child: _buildBody(filtered),

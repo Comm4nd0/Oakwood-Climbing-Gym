@@ -327,7 +327,7 @@ class ClimbingRoute(models.Model):
     ]
 
     name = models.CharField(max_length=100)
-    grade = models.CharField(max_length=10)
+    grade = models.CharField(max_length=10, blank=True, default='')
     grade_system = models.CharField(max_length=10, choices=GRADE_SYSTEMS, default='font')
     color = models.CharField(max_length=20, choices=COLORS)
     wall_section = models.ForeignKey(WallSection, on_delete=models.CASCADE, related_name='routes')
