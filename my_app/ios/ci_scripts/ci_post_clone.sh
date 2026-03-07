@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # Xcode Cloud post-clone script
 # Installs Flutter SDK, dependencies, and CocoaPods before the build
