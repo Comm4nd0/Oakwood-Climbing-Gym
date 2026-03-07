@@ -202,7 +202,7 @@ class Command(BaseCommand):
 
         # Announcements
         Announcement.objects.get_or_create(
-            title='Welcome to Oakwood Climbing Centre!',
+            title='Welcome to Oakwood Climbing Center!',
             defaults={
                 'content': (
                     'Welcome to our state-of-the-art climbing facility featuring '
@@ -226,4 +226,4 @@ class Command(BaseCommand):
             }
         )
 
-        self.stdout.write(self.style.SUCCESS('Oakwood Climbing Centre database seeded successfully!'))
+        self.stdout.write(self.style.SUCCESS('Oakwood Climbing Center database seeded successfully!'))

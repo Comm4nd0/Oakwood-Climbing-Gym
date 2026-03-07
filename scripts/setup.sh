@@ -1,9 +1,9 @@
 #!/bin/bash
-# Initial setup script for the Oakwood Climbing Gym project
+# Initial setup script for the Oakwood Climbing Center project
 
 set -e
 
-echo "Setting up Oakwood Climbing Gym..."
+echo "Setting up Oakwood Climbing Center..."
 
 # Backend setup
 echo "Setting up Python backend..."

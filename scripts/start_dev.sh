@@ -3,7 +3,7 @@
 
 set -e
 
-echo "Starting Oakwood Climbing Gym development environment..."
+echo "Starting Oakwood Climbing Center development environment..."
 
 # Check if Docker is available
 if command -v docker &> /dev/null; then
