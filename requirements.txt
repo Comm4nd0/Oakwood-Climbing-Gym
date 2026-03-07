@@ -5,6 +5,7 @@ django-cors-headers
 django-extensions
 python-dotenv
 django-storages
+whitenoise
 boto3
 Pillow
 firebase-admin
