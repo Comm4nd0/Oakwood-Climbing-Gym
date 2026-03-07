@@ -12,6 +12,14 @@ if [ ! -d "$FLUTTER_HOME" ]; then
 fi
 export PATH="$FLUTTER_HOME/bin:$PATH"
 
+# Run Flutter's first-time setup (downloads Dart SDK, pre-caches iOS artifacts)
+flutter precache --ios
+
+# Ensure CocoaPods is installed
+if ! command -v pod &> /dev/null; then
+  gem install cocoapods
+fi
+
 # Navigate to the Flutter project root
 cd "$CI_PRIMARY_REPOSITORY_PATH/my_app"
 
