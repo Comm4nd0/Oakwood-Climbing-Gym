@@ -175,7 +175,7 @@ class _DashboardTabState extends State<DashboardTab> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Oakwood Climbing Centre'),
+        title: const Text('Oakwood Climbing Center'),
       ),
       body: RefreshIndicator(
         onRefresh: _loadCapacity,

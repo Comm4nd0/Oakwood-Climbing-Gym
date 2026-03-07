@@ -668,7 +668,7 @@
 				DEVELOPMENT_TEAM = TV3LZKGB46;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = Runner/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = Oakwoo;
+				INFOPLIST_KEY_CFBundleDisplayName = Oakwood;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.healthcare-fitness";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",

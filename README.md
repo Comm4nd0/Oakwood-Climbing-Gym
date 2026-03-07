@@ -1,6 +1,6 @@
-# Oakwood Climbing Centre
+# Oakwood Climbing Center
 
-A mobile app for **Oakwood Climbing Centre** (Bracknell, UK), built with **Flutter** (Dart) and **Django REST Framework** (Python). Designed for managing both **members** and **staff**.
+A mobile app for **Oakwood Climbing Center** (Bracknell, UK), built with **Flutter** (Dart) and **Django REST Framework** (Python). Designed for managing both **members** and **staff**.
 
 ## Architecture
 
@@ -137,7 +137,7 @@ python manage.py seed_data
 
 ## Contact
 
-Oakwood Climbing Centre
+Oakwood Climbing Center
 Waterloo Rd, Bracknell, Wokingham RG40 3DA
 0118 979 2246 | enquiries@oakwoodclimbingcentre.com
 https://www.oakwoodclimbingcentre.com

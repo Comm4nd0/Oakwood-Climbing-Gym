@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class AppTheme {
-  // Oakwood Climbing Centre brand palette
+  // Oakwood Climbing Center brand palette
   // Inspired by the climbing wall colors — a bright, kid-friendly palette
   // balanced with clean white space (designed by The Creative Donut)
   static const Color primaryColor = Color(0xFF24272D);     // Dark charcoal (main brand)

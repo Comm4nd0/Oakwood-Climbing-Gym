@@ -27,7 +27,7 @@ class OakwoodClimbingApp extends StatelessWidget {
         ),
       ],
       child: MaterialApp(
-        title: 'Oakwood Climbing Gym',
+        title: 'Oakwood Climbing Center',
         theme: AppTheme.lightTheme,
         debugShowCheckedModeBanner: false,
         home: const HomeScreen(),

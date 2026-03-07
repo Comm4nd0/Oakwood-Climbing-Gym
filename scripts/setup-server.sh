@@ -1,5 +1,5 @@
 #!/bin/bash
-# Deployment script for Oakwood Climbing Gym API
+# Deployment script for Oakwood Climbing Center API
 # Run this ON the Hetzner server as root
 #
 # Prerequisites:
@@ -14,7 +14,7 @@ APP_DIR="/opt/oakwood-climbing"
 REPO_URL="https://github.com/Comm4nd0/Oakwood-Climbing-Gym.git"
 SERVER_IP="178.104.29.66"
 
-echo "=== Oakwood Climbing Gym: Server Setup ==="
+echo "=== Oakwood Climbing Center: Server Setup ==="
 echo ""
 
 # ============================================================================
