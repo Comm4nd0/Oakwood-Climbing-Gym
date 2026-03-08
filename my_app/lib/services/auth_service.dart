@@ -18,8 +18,12 @@ class AuthService extends ChangeNotifier {
     notifyListeners();
   }
 
+  String? _lastError;
+  String? get lastError => _lastError;
+
   Future<bool> login(String email, String password) async {
     _isLoading = true;
+    _lastError = null;
     notifyListeners();
 
     try {
@@ -36,8 +40,12 @@ class AuthService extends ChangeNotifier {
         _isLoading = false;
         notifyListeners();
         return true;
+      } else {
+        _lastError = 'Invalid email or password';
+        debugPrint('Login failed [${response.statusCode}]: ${response.body}');
       }
     } catch (e) {
+      _lastError = 'Could not connect to server';
       debugPrint('Login error: $e');
     }
 

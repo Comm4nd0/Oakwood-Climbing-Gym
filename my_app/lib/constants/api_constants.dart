@@ -1,7 +1,7 @@
 class ApiConstants {
   // Toggle between local dev and production server
-  static const bool _useProduction = false;
-  static const String _localUrl = 'http://127.0.0.1:8000';
+  static const bool _useProduction = true;
+  static const String _localUrl = 'http://10.0.2.2:8000';
   static const String _prodUrl = 'http://178.104.29.66:8001';
   static const String baseUrl = _useProduction ? _prodUrl : _localUrl;
   static const String apiUrl = '$baseUrl/api';
