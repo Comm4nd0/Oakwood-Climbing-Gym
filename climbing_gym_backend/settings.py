@@ -14,7 +14,9 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-change-me-in-production')
 
 DEBUG = os.getenv('DEBUG', 'True').lower() in ('true', '1', 'yes')
 
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1,10.0.2.2').split(',')
+if DEBUG:
+    ALLOWED_HOSTS = ['*']
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -138,5 +140,8 @@ CORS_ALLOW_ALL_ORIGINS = DEBUG
 DJOSER = {
     'LOGIN_FIELD': 'email',
     'USER_CREATE_PASSWORD_RETYPE': True,
-    'SERIALIZERS': {},
+    'SERIALIZERS': {
+        'user_create': 'api.djoser_serializers.CustomUserCreateSerializer',
+        'current_user': 'api.djoser_serializers.CustomCurrentUserSerializer',
+    },
 }

@@ -38,8 +38,8 @@ class _LoginScreenState extends State<LoginScreen> {
       Navigator.of(context).popUntil((route) => route.isFirst);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Invalid email or password'),
+        SnackBar(
+          content: Text(authService.lastError ?? 'Login failed'),
           backgroundColor: Colors.red,
         ),
       );
