@@ -136,6 +136,16 @@ class _AddRouteScreenState extends State<AddRouteScreen> {
       return;
     }
 
+    if (_pickedImage == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please take a photo of the wall'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
     setState(() => _isLoading = true);
 
     try {
@@ -242,12 +252,24 @@ class _AddRouteScreenState extends State<AddRouteScreen> {
               const SizedBox(height: 16),
 
               // Photo
-              Text(
-                'Photo',
-                style: Theme.of(context)
-                    .textTheme
-                    .titleSmall
-                    ?.copyWith(fontWeight: FontWeight.w600),
+              Row(
+                children: [
+                  Text(
+                    'Photo',
+                    style: Theme.of(context)
+                        .textTheme
+                        .titleSmall
+                        ?.copyWith(fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    '*',
+                    style: TextStyle(
+                      color: Colors.red.shade700,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 8),
               GestureDetector(
@@ -278,8 +300,16 @@ class _AddRouteScreenState extends State<AddRouteScreen> {
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              'Tap to add a photo',
+                              'Tap to take a photo of the wall',
                               style: TextStyle(color: Colors.grey.shade600),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'Required',
+                              style: TextStyle(
+                                color: Colors.red.shade400,
+                                fontSize: 12,
+                              ),
                             ),
                           ],
                         ),

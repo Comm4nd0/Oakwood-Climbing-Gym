@@ -5,6 +5,7 @@ import '../../models/capacity.dart';
 import 'checkin_screen.dart';
 import 'shifts_screen.dart';
 import '../support_screen.dart';
+import '../add_route_screen.dart';
 
 class StaffHubScreen extends StatefulWidget {
   const StaffHubScreen({super.key});
@@ -156,6 +157,16 @@ class _StaffHubScreenState extends State<StaffHubScreen> {
                 onTap: () => Navigator.push(
                   context,
                   MaterialPageRoute(builder: (_) => const ShiftsScreen()),
+                ),
+              ),
+              _StaffActionTile(
+                icon: Icons.route,
+                title: 'Set Routes',
+                subtitle: 'Add new climbing routes with photos',
+                color: Colors.indigo,
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const AddRouteScreen()),
                 ),
               ),
               _StaffActionTile(
